@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Ingredient</title>
+    <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
+    <style>
+        /* Optional: Style the confirmation message */
+        #confirmation-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            text-align: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{% url 'index' %}">Home</a></li>
+            <li><a href="{% url 'add_recipe' %}">Add Recipe</a></li>
+            <li><a href="{% url 'add_ingredient' %}">Add Ingredient</a></li>
+        </ul>
+    </nav>
+    <div class="form-container">
+        <h1>Add Ingredient</h1>
+        <!-- Confirmation message, hidden by default -->
+        <div id="confirmation-message" style="display: none;">
+            Ingredient submitted successfully.
+        </div>
+        <form id="ingredient-form" method="post">
+            {% csrf_token %}
+            {{ form.name.label_tag }} {{ form.name }}
+            <button type="submit">Submit Ingredient</button>
+        </form>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const form = document.getElementById('ingredient-form');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();  // Prevent default form submission
+                const formData = new FormData(form);
+                // Submit form via AJAX (using fetch)
+                fetch("", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error("Submission failed");
+                    }
+                })
+                .then(data => {
+                    // Show confirmation message on success
+                    const confirmationDiv = document.getElementById('confirmation-message');
+                    confirmationDiv.style.display = 'block';
+                })
+                .catch(error => {
+                    console.error("Error submitting form:", error);
+                });
+            });
+
+            // When user clicks anywhere outside the confirmation message, hide it
+            document.addEventListener('click', function(e) {
+                const confirmationDiv = document.getElementById('confirmation-message');
+                if (confirmationDiv.style.display === 'block' && !confirmationDiv.contains(e.target)) {
+                    confirmationDiv.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

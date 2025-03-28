@@ -1,0 +1,361 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" style="background-color: #f1f1f1;">
+<head>
+  <meta charset="UTF-8">
+  <title>{% if home_page %}{{ home_page.title }}{% else %}Westbrook Recipes{% endif %}</title>
+  <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
+  <style>
+    /* Global Styles (unchanged) */
+    #parent {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    #child {
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+      padding-right: 17px; /* Increase/decrease for cross-browser compatibility */
+      box-sizing: content-box;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      width: 100%;
+      height: 100%;
+    }
+    nav {
+      background: #dec773;
+      padding: 17px;
+    }
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+    nav ul li {
+      margin-right: 20px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+    }
+    /* New styling for right-aligned nav items */
+    nav ul li.nav-right {
+      margin-left: auto;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    /* Home header styling */
+    .home-header {
+      height: 100vh; /* Full viewport height */
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      display: flex;
+    }
+    .overlay {
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+      position: relative;
+    }
+    .header-content {
+      position: absolute;
+      top: 28vh; /* 28% down from the top */
+      left: 11vh; /* Fixed 11% from the left */
+      color: #fff;
+    }
+    .header-content h1 {
+      width: 100%;
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+    .view-recipes {
+      background-color: #6495ED; /* Blue background */
+      color: #fff; /* White text */
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-right: 20px;
+    }
+    .header-search {
+      display: inline-block;
+      background: #dec773;
+      padding: 8px 10px; /* Smaller side padding */
+      border-radius: 30px;
+      box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
+      vertical-align: middle;
+    }
+    .header-search form {
+      display: flex;
+      align-items: center;
+    }
+    .header-search input[type="text"] {
+      padding: 8px; /* Reduced padding */
+      border: none;
+      font-size: 1em;
+      border-radius: 30px 0 0 30px;
+    }
+    .header-search button {
+      padding: 8px;
+      border: none;
+      font-size: 1em;
+      border-radius: 0 30px 30px 0;
+      cursor: pointer;
+      background-color: #6495ED;
+      color: #fff;
+    }
+    .form-container {
+      width: 80%;
+      margin: 20px auto;
+    }
+    #recipes-section {
+      padding: 20px;
+    }
+    /* Recipe list styling (unchanged) */
+    .recipe-list {
+      list-style: none;
+      padding: 0;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+    .recipe-post {
+      margin-bottom: 30px;
+      clear: both;
+    }
+    .recipe-left, .recipe-right {
+      width: 66.66%;
+      background: #f9f9f9;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .recipe-left {
+      float: left;
+    }
+    .recipe-right {
+      float: right;
+    }
+    .recipe-title {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+      border-bottom: 2px solid #dec773;
+      padding-bottom: 5px;
+    }
+    .recipe-instructions {
+      font-size: 1em;
+      line-height: 1.5;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .recipe-ingredients {
+      font-size: 0.9em;
+      color: #777;
+    }
+    /* Overlay and nav button styles */
+    #screen-off-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: black;
+      z-index: 1000;
+      cursor: pointer;
+    }
+    #overlay-content {
+      position: absolute;
+      /* We'll control left and top via JS for bouncing */
+      text-align: center;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    #overlay-content .overlay-text {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+    #overlay-content .overlay-icon img {
+      width: 144px;
+      height: 144px;
+    }
+    nav ul li button {
+      background: none;
+      border: none;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+    }
+    /* Hide scrollbar in the #child container */
+    #child::-webkit-scrollbar {
+      display: none;
+    }
+    #child {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="parent">
+    <div id="child">
+      <!-- Black Overlay -->
+      <div id="screen-off-overlay" onclick="turnOnScreen()">
+        <div id="overlay-content">
+          <div class="overlay-text">Click to turn on the screen again</div>
+          <div class="overlay-icon">
+            <img src="{% static '3960289.png' %}" alt="Touch Icon">
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <nav>
+        <ul>
+          <li><a href="{% url 'index' %}">Home</a></li>
+          <li><a href="{% url 'add_recipe' %}">Add Recipe</a></li>
+          <li><a href="{% url 'add_ingredient' %}">Add Ingredient</a></li>
+          <li class="nav-right">
+            <button onclick="turnOffScreen()">Turn Off Screen</button>
+            <a href="/admin/">Admin</a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Home Header Section -->
+      <header class="home-header" style="background-image: url('{{ home_page.background_image.url }}');">
+        <div class="overlay">
+          <div class="header-content">
+            <h1>{% if home_page %}{{ home_page.title }}{% else %}Westbrook Recipes{% endif %}</h1>
+            <button class="view-recipes" onclick="scrollToRecipes()">View Recipes</button>
+            <div class="header-search">
+              <form method="GET" action="">
+                <input type="text" name="q" placeholder="Search anything..." value="{{ query }}">
+                <button type="submit">Search</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Recipes Section -->
+      <section id="recipes-section">
+        <h2>Recipes</h2>
+        {% if recipes %}
+          <ul class="recipe-list">
+            {% for recipe in recipes %}
+              <li class="recipe-post {% if forloop.counter0|divisibleby:"2" %}recipe-left{% else %}recipe-right{% endif %}">
+                <div class="recipe-header">
+                  <div class="recipe-title">{{ recipe.title }}</div>
+                  <div class="recipe-ingredients">
+                    Ingredients:
+                    {% for ingredient in recipe.ingredients.all %}
+                      {{ ingredient.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="recipe-instructions">
+                  {{ recipe.instructions|safe }}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+          <div style="clear: both;"></div>
+        {% else %}
+          <p>No recipes found.</p>
+        {% endif %}
+      </section>
+    </div> <!-- end of #child -->
+  </div> <!-- end of #parent -->
+
+  <script>
+    // Show the black overlay
+    function turnOffScreen() {
+      document.getElementById("screen-off-overlay").style.display = "block";
+    }
+    // Hide the black overlay when clicked
+    function turnOnScreen() {
+      document.getElementById("screen-off-overlay").style.display = "none";
+    }
+
+    // Smooth scroll function for the #child container
+    function smoothScrollContainer(container, target, duration) {
+      var start = container.scrollTop;
+      var change = target - start;
+      var startTime = performance.now();
+
+      function easeInOutQuad(t) {
+        return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+      }
+
+      function animateScroll(currentTime) {
+        var elapsed = currentTime - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        var easedProgress = easeInOutQuad(progress);
+        container.scrollTop = start + change * easedProgress;
+        if (elapsed < duration) {
+          requestAnimationFrame(animateScroll);
+        }
+      }
+      requestAnimationFrame(animateScroll);
+    }
+    function scrollToRecipes() {
+      var recipesSection = document.getElementById("recipes-section");
+      var scrollContainer = document.getElementById("child");
+      if (recipesSection && scrollContainer) {
+        smoothScrollContainer(scrollContainer, recipesSection.offsetTop, 800);
+      }
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+      if (window.location.search.indexOf("q=") !== -1) {
+        setTimeout(scrollToRecipes, 300);
+      }
+    });
+
+    // Bouncing animation for overlay content (like the DVD logo), slowed down
+    (function() {
+      var overlayContent = document.getElementById("overlay-content");
+      var container = document.getElementById("screen-off-overlay");
+      // Slower velocities: reduced multiplier
+      var velocityX = (Math.random() * 0.25 + 0.5) * (Math.random() < 1.5 ? 1 : -1);
+      var velocityY = (Math.random() * 0.25 + 0.5) * (Math.random() < 1.5 ? 1 : -1);
+      var posX = 0;
+      var posY = 0;
+
+      function animateOverlayContent() {
+        if (container.style.display === "block") {
+          var containerWidth = container.clientWidth;
+          var containerHeight = container.clientHeight;
+          var contentWidth = overlayContent.offsetWidth;
+          var contentHeight = overlayContent.offsetHeight;
+
+          posX += velocityX;
+          posY += velocityY;
+
+          // Bounce on horizontal edges
+          if (posX <= 0 || posX + contentWidth >= containerWidth) {
+            velocityX = -velocityX;
+            posX = Math.max(0, Math.min(posX, containerWidth - contentWidth));
+          }
+          // Bounce on vertical edges
+          if (posY <= 0 || posY + contentHeight >= containerHeight) {
+            velocityY = -velocityY;
+            posY = Math.max(0, Math.min(posY, containerHeight - contentHeight));
+          }
+          overlayContent.style.left = posX + "px";
+          overlayContent.style.top = posY + "px";
+        }
+        requestAnimationFrame(animateOverlayContent);
+      }
+      requestAnimationFrame(animateOverlayContent);
+    })();
+  </script>
+</body>
+</html>

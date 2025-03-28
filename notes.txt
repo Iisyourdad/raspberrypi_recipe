@@ -1,0 +1,30 @@
+For a dedicated kiosk setup on your Raspberry Pi, it's best to launch your browser in kiosk mode rather than relying on simulated clicks. For example, if you use Chromium, you can configure it to start in fullscreen mode automatically. Here's how you might do it:
+
+Install Chromium (if not already installed):
+
+bash
+Copy
+
+
+sudo apt-get install chromium-browser
+
+
+Configure Chromium to Launch in Kiosk Mode:
+Edit your autostart file (for example, if using LXDE, edit ~/.config/lxsession/LXDE-pi/autostart) and add a line like:
+
+bash
+Copy
+
+
+@chromium-browser --kiosk http://127.0.0.1:8000
+
+
+This command tells Chromium to open your website (http://127.0.0.1:8000) in fullscreen kiosk mode, bypassing any browser UI or need for a user gesture.
+
+This approach is much more reliable for your use-case, as it ensures your website occupies the entire screen as soon as the Raspberry Pi boots up—no button click needed.
+
+
+bottom of this chat.
+
+https://chatgpt.com/share/67e3827b-cac0-8011-a6ec-dde708b730e3
+

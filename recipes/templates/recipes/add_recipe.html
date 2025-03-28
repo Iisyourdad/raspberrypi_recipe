@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Recipe</title>
+  <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
+  <style type="text/css">
+    .main-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    /* Container for the ingredients section */
+    #ingredients-container {
+      margin-top: 10px;
+    }
+    /* Search input for filtering check boxes */
+    #ingredient-search {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      font-size: 1em;
+    }
+    /* Two-column layout for checkboxes */
+    #ingredients-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .ingredient-checkbox {
+      width: 50%;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav>
+    <ul>
+      <li><a href="{% url 'index' %}">Home</a></li>
+      <li><a href="{% url 'add_recipe' %}">Add Recipe</a></li>
+      <li><a href="{% url 'add_ingredient' %}">Add Ingredient</a></li>
+    </ul>
+  </nav>
+
+  <div class="main-container">
+    <h1>Add Recipe</h1>
+    <form action="" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.media }}
+      <div class="form-group">
+        {{ form.title.label_tag }}<br>
+        {{ form.title }}
+      </div>
+      <div class="form-group">
+        {{ form.instructions.label_tag }}<br>
+        {{ form.instructions }}
+      </div>
+      <div class="form-group" id="ingredients-container">
+        <label for="ingredient-search">Ingredients</label><br>
+        <!-- Search bar for filtering ingredients -->
+        <input type="text" id="ingredient-search" placeholder="Search ingredients...">
+        <!-- Two-column container for checkboxes -->
+        <div id="ingredients-checkboxes">
+          {% for checkbox in form.ingredients %}
+            <div class="ingredient-checkbox">
+              {{ checkbox.tag }} {{ checkbox.choice_label }}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Recipe</button>
+    </form>
+  </div>
+
+  <script>
+    // Filter checkboxes based on search input.
+    document.addEventListener("DOMContentLoaded", function() {
+      var searchInput = document.getElementById("ingredient-search");
+      searchInput.addEventListener("keyup", function() {
+        var filter = searchInput.value.toLowerCase();
+        var checkboxes = document.getElementsByClassName("ingredient-checkbox");
+        Array.prototype.forEach.call(checkboxes, function(checkboxDiv) {
+          var labelText = checkboxDiv.textContent.toLowerCase();
+          checkboxDiv.style.display = labelText.indexOf(filter) > -1 ? "block" : "none";
+        });
+      });
+    });
+  </script>
+</body>
+</html>
