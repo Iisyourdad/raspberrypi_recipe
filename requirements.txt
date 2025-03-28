@@ -1,11 +1,9 @@
-#pip install asgiref, Django, django-ckeditor, django-crispy-forms, django-js-asset, pillow, sqlparse, tzdata, gunicorn
-
-asgiref
-Django
-django-ckeditor
-django-crispy-forms
-django-js-asset
-pillow
-sqlparse
-tzdata
-gunicorn
+asgiref==3.8.1
+Django==5.1.7
+django-ckeditor==6.7.2
+django-crispy-forms==2.3
+django-js-asset==3.1.2
+gunicorn==23.0.0
+pillow==11.1.0
+sqlparse==0.5.3
+tzdata==2025.2

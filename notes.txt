@@ -1,3 +1,6 @@
+pip install asgiref, Django, django-ckeditor, django-crispy-forms, django-js-asset, pillow, sqlparse, tzdata, gunicorn
+
+
 For a dedicated kiosk setup on your Raspberry Pi, it's best to launch your browser in kiosk mode rather than relying on simulated clicks. For example, if you use Chromium, you can configure it to start in fullscreen mode automatically. Here's how you might do it:
 
 Install Chromium (if not already installed):

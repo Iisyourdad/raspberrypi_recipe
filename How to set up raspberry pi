@@ -1,3 +1,5 @@
 run
 
 sudo python3 easy_setup.py
+
+/home/pi/ip_address.txt is where the ip address is so that you can connect to it from any computer to edit recipies ect.

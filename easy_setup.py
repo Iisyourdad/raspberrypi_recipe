@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import socket
 
 # Paths and settings
 REPO_URL = "https://github.com/Iisyourdad/raspberrypi_recipe.git"
@@ -11,8 +12,10 @@ REQUIREMENTS_FILE = os.path.join(PROJECT_DIR, "requirements.txt")
 DJANGO_SERVICE_FILE = "/etc/systemd/system/django.service"
 AUTOSTART_DIR = "/home/pi/.config/lxsession/LXDE-pi"
 AUTOSTART_FILE = os.path.join(AUTOSTART_DIR, "autostart")
-KIOSK_LINE = "@chromium-browser --kiosk http://127.0.0.1:8000/\n"
+# Update kiosk mode URL to reflect the new port (27645)
+KIOSK_LINE = "@chromium-browser --kiosk http://127.0.0.1:27645/\n"
 SELF_SERVICE_FILE = "/etc/systemd/system/easy_setup.service"
+IP_OUTPUT_FILE = "/home/pi/ip_address.txt"  # File to save IP address
 
 def run_command(cmd, cwd=None):
     print(f"Running: {cmd}")
@@ -48,7 +51,7 @@ After=network.target
 [Service]
 User=pi
 WorkingDirectory={PROJECT_DIR}
-ExecStart={VENV_DIR}/bin/python manage.py runserver 0.0.0.0:8000
+ExecStart={VENV_DIR}/bin/python manage.py runserver 0.0.0.0:27645
 Restart=always
 
 [Install]
@@ -83,9 +86,7 @@ def setup_kiosk_mode():
 
 def setup_self_autostart():
     """
-    This function creates a systemd service that runs this very script
-    at boot. This way, every time the Raspberry Pi starts, this script
-    is executed, ensuring the repo is updated and services are configured.
+    Creates a systemd service that runs this very script at boot.
     """
     if not os.path.exists(SELF_SERVICE_FILE):
         # Use the absolute path to the current script
@@ -115,6 +116,33 @@ WantedBy=multi-user.target
     else:
         print("Self-autostart service already exists.")
 
+def get_ip_address():
+    """
+    Retrieves the primary IP address of the Raspberry Pi.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # This doesn't have to be reachable; it's used to determine the interface used
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+def save_ip_address():
+    """
+    Saves the Raspberry Pi's IP address to a file.
+    """
+    ip = get_ip_address()
+    try:
+        with open(IP_OUTPUT_FILE, "w") as f:
+            f.write(ip + "\n")
+        print(f"Saved IP address {ip} to {IP_OUTPUT_FILE}")
+    except Exception as e:
+        print(f"Failed to save IP address: {e}")
+
 def main():
     if os.geteuid() != 0:
         print("This script must be run as root (try using sudo).")
@@ -137,6 +165,9 @@ def main():
 
     print("Setting up self-autostart service for this script...")
     setup_self_autostart()
+
+    print("Saving Raspberry Pi IP address...")
+    save_ip_address()
 
     print("Setup complete. Reboot your Raspberry Pi to test the configuration.")
 
