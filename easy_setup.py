@@ -2,14 +2,17 @@ import os
 import subprocess
 import sys
 
+# Paths and settings
+REPO_URL = "https://github.com/Iisyourdad/raspberrypi_recipe.git"
 REPO_DIR = "/home/pi/raspberrypi_recipe-main"
 PROJECT_DIR = os.path.join(REPO_DIR, "westbrook_recipes")
 VENV_DIR = os.path.join(PROJECT_DIR, "venv")
 REQUIREMENTS_FILE = os.path.join(PROJECT_DIR, "requirements.txt")
-SERVICE_FILE = "/etc/systemd/system/django.service"
+DJANGO_SERVICE_FILE = "/etc/systemd/system/django.service"
 AUTOSTART_DIR = "/home/pi/.config/lxsession/LXDE-pi"
 AUTOSTART_FILE = os.path.join(AUTOSTART_DIR, "autostart")
 KIOSK_LINE = "@chromium-browser --kiosk http://127.0.0.1:8000/\n"
+SELF_SERVICE_FILE = "/etc/systemd/system/easy_setup.service"
 
 def run_command(cmd, cwd=None):
     print(f"Running: {cmd}")
@@ -18,22 +21,17 @@ def run_command(cmd, cwd=None):
         print(f"Command failed: {cmd}")
         sys.exit(1)
 
-def update_repo():
-    print("Updating repository with latest changes...")
-    # Change directory to the repository root and pull updates
-    run_command("git pull", cwd=REPO_DIR)
-
 def update_system():
     run_command("apt-get update -y")
     run_command("apt-get upgrade -y")
     run_command("apt-get install -y git python3-pip python3-venv chromium-browser")
 
-def clone_repo():
+def clone_or_update_repo():
     if not os.path.exists(REPO_DIR):
-        run_command(f"git clone https://github.com/Iisyourdad/raspberrypi_recipe.git {REPO_DIR}")
+        run_command(f"git clone {REPO_URL} {REPO_DIR}")
     else:
-        print(f"Repository already exists at {REPO_DIR}.")
-        update_repo()
+        print(f"Repository already exists at {REPO_DIR}. Pulling latest changes...")
+        run_command("git pull", cwd=REPO_DIR)
 
 def setup_virtualenv():
     os.chdir(PROJECT_DIR)
@@ -42,7 +40,7 @@ def setup_virtualenv():
     run_command(f"{VENV_DIR}/bin/pip install --upgrade pip")
     run_command(f"{VENV_DIR}/bin/pip install -r {REQUIREMENTS_FILE}")
 
-def create_systemd_service():
+def create_django_service():
     service_content = f"""[Unit]
 Description=Django Development Server
 After=network.target
@@ -57,11 +55,11 @@ Restart=always
 WantedBy=multi-user.target
 """
     try:
-        with open(SERVICE_FILE, "w") as f:
+        with open(DJANGO_SERVICE_FILE, "w") as f:
             f.write(service_content)
-        print(f"Created systemd service file at {SERVICE_FILE}")
+        print(f"Created Django service file at {DJANGO_SERVICE_FILE}")
     except Exception as e:
-        print(f"Failed to write systemd file: {e}")
+        print(f"Failed to write Django service file: {e}")
         sys.exit(1)
     run_command("systemctl daemon-reload")
     run_command("systemctl enable django")
@@ -83,6 +81,40 @@ def setup_kiosk_mode():
             f.write(KIOSK_LINE)
         print("Created autostart file with kiosk mode command.")
 
+def setup_self_autostart():
+    """
+    This function creates a systemd service that runs this very script
+    at boot. This way, every time the Raspberry Pi starts, this script
+    is executed, ensuring the repo is updated and services are configured.
+    """
+    if not os.path.exists(SELF_SERVICE_FILE):
+        # Use the absolute path to the current script
+        script_path = os.path.abspath(__file__)
+        service_content = f"""[Unit]
+Description=Run Easy Setup Script at Boot
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 {script_path}
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+"""
+        try:
+            with open(SELF_SERVICE_FILE, "w") as f:
+                f.write(service_content)
+            print(f"Created self-autostart service file at {SELF_SERVICE_FILE}")
+        except Exception as e:
+            print(f"Failed to write self-autostart service file: {e}")
+            sys.exit(1)
+        run_command("systemctl daemon-reload")
+        run_command("systemctl enable easy_setup.service")
+        print("Enabled easy_setup.service to run at startup.")
+    else:
+        print("Self-autostart service already exists.")
+
 def main():
     if os.geteuid() != 0:
         print("This script must be run as root (try using sudo).")
@@ -91,20 +123,20 @@ def main():
     print("Updating system and installing necessary packages...")
     update_system()
 
-    print("Cloning repository...")
-    clone_repo()
-
-    # Pull the latest changes every time the script runs
-    update_repo()
+    print("Cloning or updating repository...")
+    clone_or_update_repo()
 
     print("Setting up virtual environment and installing requirements...")
     setup_virtualenv()
 
-    print("Creating systemd service for Django...")
-    create_systemd_service()
+    print("Creating Django systemd service...")
+    create_django_service()
 
     print("Configuring Chromium kiosk mode...")
     setup_kiosk_mode()
+
+    print("Setting up self-autostart service for this script...")
+    setup_self_autostart()
 
     print("Setup complete. Reboot your Raspberry Pi to test the configuration.")
 
