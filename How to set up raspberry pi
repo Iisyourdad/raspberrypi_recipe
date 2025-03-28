@@ -1,0 +1,5 @@
+sudo apt-get update
+sudo apt-get install python3-pip git chromium-browser
+git clone https://github.com/Iisyourdad/raspberrypi_recipe.git
+cd raspberrypi_recipe
+pip3 install -r requirements.txt
