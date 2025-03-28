@@ -136,6 +136,7 @@ nav ul li a {
     padding: 0;
     margin: 20px auto;
     overflow: hidden;
+    background: #eeeeee;
 }
 
 .recipe-post {
@@ -146,6 +147,7 @@ nav ul li a {
 .recipe-left, .recipe-right {
     width: 66.66%;
     background: #f9f9f9;
+    padding: 20px;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
