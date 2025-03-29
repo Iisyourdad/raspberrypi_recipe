@@ -17,12 +17,17 @@ KIOSK_LINE = "@chromium-browser --kiosk http://127.0.0.1:27645/\n"
 SELF_SERVICE_FILE = "/etc/systemd/system/easy_setup.service"
 IP_OUTPUT_FILE = "/home/pi/ip_address.txt"  # File to save IP address
 
+import subprocess
+
 def run_command(cmd, cwd=None):
     print(f"Running: {cmd}")
-    result = subprocess.run(cmd, shell=True, cwd=cwd)
+    result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
+    print(result.stdout)
+    print(result.stderr)
     if result.returncode != 0:
         print(f"Command failed: {cmd}")
-        sys.exit(1)
+        exit(1)
+
 
 def update_system():
     run_command("apt-get update -y")
