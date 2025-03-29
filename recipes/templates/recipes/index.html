@@ -222,6 +222,9 @@
           <li><a href="{% url 'index' %}">Home</a></li>
           <li><a href="{% url 'add_recipe' %}">Add Recipe</a></li>
           <li><a href="{% url 'add_ingredient' %}">Add Ingredient</a></li>
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'favorites' %}">My Favorites</a></li>
+          {% endif %}
           <li class="nav-right">
             <button onclick="turnOffScreen()">Turn Off Screen</button>
             <a href="/admin/">Admin</a>
@@ -254,6 +257,13 @@
               <li class="recipe-post {% if forloop.counter0|divisibleby:"2" %}recipe-left{% else %}recipe-right{% endif %}">
                 <div class="recipe-header">
                   <div class="recipe-title">{{ recipe.title }}</div>
+                  {% if user.is_authenticated %}
+                    {% if user in recipe.favorites.all %}
+                      <a class="favorite-link" href="{% url 'toggle_favorite' recipe.id %}">Unfavorite</a>
+                    {% else %}
+                      <a class="favorite-link" href="{% url 'toggle_favorite' recipe.id %}">Favorite</a>
+                    {% endif %}
+                  {% endif %}
                   <div class="recipe-ingredients">
                     Ingredients:
                     {% for ingredient in recipe.ingredients.all %}
