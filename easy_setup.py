@@ -12,8 +12,8 @@ REQUIREMENTS_FILE = os.path.join(PROJECT_DIR, "requirements.txt")
 DJANGO_SERVICE_FILE = "/etc/systemd/system/django.service"
 AUTOSTART_DIR = "/home/pi/.config/lxsession/LXDE-pi"
 AUTOSTART_FILE = os.path.join(AUTOSTART_DIR, "autostart")
-# Update kiosk mode URL to reflect the new port (27645) and new hostname
-KIOSK_LINE = "@chromium-browser --kiosk http://recipes.swestbrook.org:27645/\n"
+# Update kiosk mode URL to reflect the new port (27645)
+KIOSK_LINE = "@chromium-browser --kiosk http://127.0.0.1:27645/\n"
 SELF_SERVICE_FILE = "/etc/systemd/system/easy_setup.service"
 IP_OUTPUT_FILE = "/home/pi/ip_address.txt"  # File to save IP address
 
@@ -143,13 +143,6 @@ def save_ip_address():
     except Exception as e:
         print(f"Failed to save IP address: {e}")
 
-def set_hostname(new_hostname):
-    """
-    Sets the system hostname using hostnamectl.
-    """
-    print(f"Setting hostname to {new_hostname}...")
-    run_command(f"hostnamectl set-hostname {new_hostname}")
-
 def main():
     if os.geteuid() != 0:
         print("This script must be run as root (try using sudo).")
@@ -157,9 +150,6 @@ def main():
 
     print("Updating system and installing necessary packages...")
     update_system()
-
-    print("Setting system hostname...")
-    set_hostname("recipes.swestbrook.org")
 
     print("Cloning or updating repository...")
     clone_or_update_repo()
