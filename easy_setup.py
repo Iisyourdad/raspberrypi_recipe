@@ -17,8 +17,6 @@ KIOSK_LINE = "@chromium-browser --kiosk http://127.0.0.1:27645/\n"
 SELF_SERVICE_FILE = "/etc/systemd/system/easy_setup.service"
 IP_OUTPUT_FILE = "/home/pi/ip_address.txt"  # File to save IP address
 
-import subprocess
-
 def run_command(cmd, cwd=None):
     print(f"Running: {cmd}")
     result = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True)
@@ -27,7 +25,6 @@ def run_command(cmd, cwd=None):
     if result.returncode != 0:
         print(f"Command failed: {cmd}")
         exit(1)
-
 
 def update_system():
     run_command("apt-get update -y")
@@ -46,7 +43,8 @@ def setup_virtualenv():
     if not os.path.exists(VENV_DIR):
         run_command("python3 -m venv venv")
     run_command(f"{VENV_DIR}/bin/pip install --upgrade pip")
-    run_command(f"{VENV_DIR}/bin/pip install -r {REQUIREMENTS_FILE}")
+    # Install the required packages instead of using the requirements file
+    run_command(f"{VENV_DIR}/bin/pip install asgiref Django django-ckeditor django-crispy-forms django-js-asset pillow sqlparse tzdata gunicorn")
 
 def create_django_service():
     service_content = f"""[Unit]
