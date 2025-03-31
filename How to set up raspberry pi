@@ -12,7 +12,8 @@ chmod +x /home/pi/run_kiosk.sh
 
 cd Downloads
 
-git pull https://github.com/Iisyourdad/raspberrypi_recipe.git
+git clone https://github.com/Iisyourdad/raspberrypi_recipe.git
+
 
 
 sudo apt update
