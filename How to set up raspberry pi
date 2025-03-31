@@ -15,7 +15,7 @@ cd Downloads
 git clone https://github.com/Iisyourdad/raspberrypi_recipe.git
 
 
-
+cd raspberrypi_recipe
 sudo apt update
 sudo apt install python3-venv
 
@@ -24,6 +24,16 @@ python3 -m venv venv
 source venv/bin/activate
 
 pip install asgiref, Django, django-ckeditor, django-crispy-forms, django-js-asset, pillow, sqlparse, tzdata, gunicorn
+pip install asgiref
+pip install Django
+pip install django-ckeditor
+pip install django-crispy-forms
+pip install django-js-asset
+pip install pillow
+pip install sqlparse
+pip install tzdata
+
+deactivate
 
 cd ..
 
@@ -38,7 +48,7 @@ Description=Django Server
 After=network.target
 
 [Service]
-User=pi
+User=tyler
 ExecStart=/home/tyler/django_server_run.sh
 Restart=always
 
@@ -54,7 +64,7 @@ Description=Kiosk Service
 After=network.target
 
 [Service]
-User=pi
+User=tyler
 ExecStart=/home/tyler/run_kiosk.sh
 Restart=always
 
