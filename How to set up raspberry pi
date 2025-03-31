@@ -12,7 +12,8 @@ chmod +x /home/pi/run_kiosk.sh
 
 cd Downloads
 
-git pull git@github.com:Iisyourdad/raspberrypi_recipe.git
+git pull https://github.com/Iisyourdad/raspberrypi_recipe.git
+
 
 sudo apt update
 sudo apt install python3-venv
