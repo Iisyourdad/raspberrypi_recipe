@@ -56,22 +56,29 @@ Restart=always
 WantedBy=multi-user.target
 
 """
-sudo nano /etc/systemd/system/kiosk.service
-"""
+mkdir -p /home/tyler/.config/systemd/user
+nano /home/tyler/.config/systemd/user/kiosk.service
 
+"""
 [Unit]
 Description=Kiosk Service
-After=network.target
+After=graphical-session.target
 
 [Service]
-User=tyler
-ExecStart=/home/tyler/run_kiosk.sh
-Restart=always
+ExecStart=/bin/bash /home/tyler/run_kiosk.sh
+Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 
 """
+systemctl --user daemon-reload
+systemctl --user enable kiosk.service
+systemctl --user start kiosk.service
+
+sudo loginctl enable-linger tyler
+
+
 sudo systemctl daemon-reload
 sudo systemctl enable django.service
 sudo systemctl enable kiosk.service
