@@ -1,5 +1,67 @@
-run
+sudo apt update
 
-sudo python3 easy_setup.py
+sudo apt full-upgrade
 
-/home/pi/ip_address.txt is where the ip address is so that you can connect to it from any computer to edit recipies ect.
+sudo raspi-config
+#select boot/autologin desktop
+
+#make sure sh files are in the right directory
+
+chmod +x /home/pi/django_server_run.sh
+chmod +x /home/pi/run_kiosk.sh
+
+cd Downloads
+
+git pull git@github.com:Iisyourdad/raspberrypi_recipe.git
+
+sudo apt update
+sudo apt install python3-venv
+
+python3 -m venv venv
+
+source venv/bin/activate
+
+pip install asgiref, Django, django-ckeditor, django-crispy-forms, django-js-asset, pillow, sqlparse, tzdata, gunicorn
+
+cd ..
+
+chmod +x /home/pi/django_server_run.sh
+chmod +x /home/pi/run_kiosk.sh
+
+sudo nano /etc/systemd/system/django.service
+"""
+
+[Unit]
+Description=Django Server
+After=network.target
+
+[Service]
+User=pi
+ExecStart=/home/pi/django_server_run.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+"""
+sudo nano /etc/systemd/system/kiosk.service
+"""
+
+[Unit]
+Description=Kiosk Service
+After=network.target
+
+[Service]
+User=pi
+ExecStart=/home/pi/run_kiosk.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+"""
+sudo systemctl daemon-reload
+sudo systemctl enable django.service
+sudo systemctl enable kiosk.service
+sudo systemctl start django.service
+sudo systemctl start kiosk.service
