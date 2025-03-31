@@ -7,8 +7,8 @@ sudo raspi-config
 
 #make sure sh files are in the right directory
 
-chmod +x /home/pi/django_server_run.sh
-chmod +x /home/pi/run_kiosk.sh
+sudo chmod +x /home/tyler/django_server_run.sh
+sudo chmod +x /home/tyler/run_kiosk.sh
 
 cd Downloads
 
@@ -27,8 +27,8 @@ pip install asgiref, Django, django-ckeditor, django-crispy-forms, django-js-ass
 
 cd ..
 
-chmod +x /home/pi/django_server_run.sh
-chmod +x /home/pi/run_kiosk.sh
+sudo d +x /home/tyler/django_server_run.sh
+sudo chmod +x /home/tyler/run_kiosk.sh
 
 sudo nano /etc/systemd/system/django.service
 """
@@ -39,7 +39,7 @@ After=network.target
 
 [Service]
 User=pi
-ExecStart=/home/pi/django_server_run.sh
+ExecStart=/home/tyler/django_server_run.sh
 Restart=always
 
 [Install]
@@ -55,7 +55,7 @@ After=network.target
 
 [Service]
 User=pi
-ExecStart=/home/pi/run_kiosk.sh
+ExecStart=/home/tyler/run_kiosk.sh
 Restart=always
 
 [Install]
