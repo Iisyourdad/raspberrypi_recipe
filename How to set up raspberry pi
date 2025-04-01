@@ -96,3 +96,25 @@ sudo nano /boot/cmdline.txt
 #add quiet splash
 
 sudo systemctl disable getty@tty1.service
+
+sudo nano /usr/local/bin/update_wifi.sh
+
+"""
+
+#!/bin/bash
+# This script receives one argument: the configuration text to append.
+CONFIG="$1"
+# Append the new network configuration.
+echo "$CONFIG" >> /etc/wpa_supplicant/wpa_supplicant.conf
+# Reconfigure WiFi on wlan0.
+sudo /usr/sbin/wpa_cli -i wlan0 reconfigure
+
+"""
+
+sudo chmod +x /usr/local/bin/update_wifi.sh
+
+sudo visudo
+
+tyler ALL=(root) NOPASSWD: /usr/local/bin/update_wifi.sh
+
+

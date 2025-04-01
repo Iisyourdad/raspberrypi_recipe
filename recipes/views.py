@@ -4,6 +4,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import HomePage, Recipe
 from .forms import RecipeForm, IngredientForm
+import os
+import tempfile
+from django.views.decorators.csrf import csrf_exempt
 
 def index(request):
     home_page = HomePage.objects.first()
@@ -63,7 +66,7 @@ def toggle_favorite(request, recipe_id):
 def favorites(request):
     user = request.user
     recipes = Recipe.objects.filter(favorites=user)
-    home_page = HomePage.objects.first()  # Include the HomePage to maintain the background image
+    home_page = HomePage.objects.first()  # To maintain the background image
     context = {
         'home_page': home_page,
         'recipes': recipes,
@@ -72,19 +75,11 @@ def favorites(request):
     }
     return render(request, 'recipes/index.html', context)
 
-
-from django.shortcuts import render
-
 def custom_404(request, exception):
     return render(request, 'recipes/404.html', status=404)
 
 def test_404(request):
     return render(request, 'recipes/404.html', status=404)
-
-
-import os
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
 
 def splash(request):
     # If already configured, send to the main page.
@@ -92,46 +87,12 @@ def splash(request):
         return redirect("index")
     return render(request, "recipes/splash.html")
 
-@csrf_exempt  # For simplicity; consider using proper CSRF protection.
-def wifi_setup(request):
-    if request.method == "POST":
-        ssid = request.POST.get("ssid")
-        password = request.POST.get("password")
-        config_text = f"""
-network={{
-    ssid="{ssid}"
-    psk="{password}"
-}}
-"""
-        try:
-            # Append network settings to the WiFi config.
-            with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as f:
-                f.write(config_text)
-            # Reconfigure WiFi (ensure proper sudoers configuration).
-            os.system("sudo wpa_cli -i wlan0 reconfigure")
-            # Mark the device as configured.
-            with open("/home/pi/configured.flag", "w") as flag_file:
-                flag_file.write("configured")
-            return redirect("configured")
-        except Exception as e:
-            return render(request, "recipes/wifi_setup.html", {"error": str(e)})
-    return render(request, "recipes/wifi_setup.html")
-
-def configured(request):
-    return render(request, "recipes/configured.html")
-
-
-import os
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt  # For brevity—ensure proper CSRF handling in production.
+@csrf_exempt  # For simplicity—ensure proper CSRF handling in production.
 def wifi_setup(request):
     if request.method == "POST":
         wifi_type = request.POST.get("wifi_type", "personal")
         ssid = request.POST.get("ssid")
         config_text = ""
-
         if wifi_type == "personal":
             password = request.POST.get("password")
             config_text = f"""
@@ -141,7 +102,7 @@ network={{
 }}
 """
         else:
-            # Enterprise fields
+            # Enterprise configuration
             eap_method = request.POST.get("eap_method", "PEAP")
             identity = request.POST.get("identity", "")
             password = request.POST.get("password")
@@ -153,7 +114,7 @@ network={{
     identity="{identity}"
     password="{password}"
 """
-            # Check for certificate file upload if provided.
+            # If a CA certificate is provided, save it and add to the config.
             ca_cert = request.FILES.get("ca_cert")
             if ca_cert:
                 cert_dir = "/etc/wpa_supplicant/certs"
@@ -167,12 +128,26 @@ network={{
             config_text += "}\n"
 
         try:
-            with open("/etc/wpa_supplicant/wpa_supplicant.conf", "a") as f:
-                f.write(config_text)
-            os.system("sudo wpa_cli -i wlan0 reconfigure")
-            with open("/home/pi/configured.flag", "w") as flag_file:
+            # Write the config text to a temporary file
+            with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp:
+                temp.write(config_text)
+                temp_filename = temp.name
+
+            # Call the helper script via sudo.
+            # Ensure that /usr/local/bin/update_wifi.sh exists and is configured in sudoers for the user 'tyler'
+            command = f'sudo /usr/local/bin/update_wifi.sh {temp_filename}'
+            os.system(command)
+
+            # Clean up the temporary file
+            os.remove(temp_filename)
+
+            # Mark the device as configured.
+            with open("/home/tyler/configured.flag", "w") as flag_file:
                 flag_file.write("configured")
             return redirect("configured")
         except Exception as e:
             return render(request, "recipes/wifi_setup.html", {"error": str(e)})
     return render(request, "recipes/wifi_setup.html")
+
+def configured(request):
+    return render(request, "recipes/configured.html")
