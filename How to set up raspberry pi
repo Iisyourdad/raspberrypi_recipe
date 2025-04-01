@@ -85,15 +85,18 @@ sudo systemctl enable kiosk.service
 sudo systemctl start django.service
 sudo systemctl start kiosk.service
 
-sudo cp /boot/config.txt /boot/config.txt.backup
-sudo nano /boot/config.txt
+sudo cp /boot/firmware/config.txt /boot/config.txt.backup
+sudo nano /boot/firmware/config.txt
 
 #Put in disable_splash=1
 
-sudo cp /boot/cmdline.txt /boot/cmdline.txt.backup
-sudo nano /boot/cmdline.txt
+sudo cp /boot/firmware/cmdline.txt /boot/cmdline.txt.backup
+sudo nano /boot/firmware/cmdline.txt
 
-#add quiet splash
+"""
+dwc_otg.lpm_enable=0 quiet splash disable_splash=1 console=serial0,115200 root=PARTUUID=b8943c97-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait
+
+"""
 
 sudo systemctl disable getty@tty1.service
 
@@ -114,7 +117,8 @@ sudo /usr/sbin/wpa_cli -i wlan0 reconfigure
 sudo chmod +x /usr/local/bin/update_wifi.sh
 
 sudo visudo
-
+"""
 tyler ALL=(root) NOPASSWD: /usr/local/bin/update_wifi.sh
+"""
 
-
+sudo update-initramfs -u

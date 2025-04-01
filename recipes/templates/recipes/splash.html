@@ -5,7 +5,6 @@
   <title>Splash</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:700|Roboto:400" rel="stylesheet">
   <style>
-    /* Full-screen gradient background and smooth fade-in */
     body {
       margin: 0;
       height: 100vh;
@@ -31,10 +30,27 @@
     }
   </style>
   <script>
-    // After 3 seconds, move on to WiFi setup
+    // After 4 seconds, check connectivity and redirect.
     setTimeout(function() {
-      window.location.href = '/wifi/';
-    }, 3000);
+      // Create an image object to test connectivity.
+      var img = new Image();
+      // Append a timestamp to avoid caching.
+      img.src = "https://clients3.google.com/generate_204?" + new Date().getTime();
+      img.onload = function() {
+        // If the image loads, assume we have internet and go to home page.
+        window.location.href = '/';
+      };
+      img.onerror = function() {
+        // If the image fails, assume no connectivity and redirect to WiFi setup.
+        window.location.href = '/wifi/';
+      };
+      // Alternatively, you could use navigator.onLine as a rough check:
+      // if (navigator.onLine) {
+      //    window.location.href = '/';
+      // } else {
+      //    window.location.href = '/wifi/';
+      // }
+    }, 4000);
   </script>
 </head>
 <body>
