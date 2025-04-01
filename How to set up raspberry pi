@@ -84,3 +84,15 @@ sudo systemctl enable django.service
 sudo systemctl enable kiosk.service
 sudo systemctl start django.service
 sudo systemctl start kiosk.service
+
+sudo cp /boot/config.txt /boot/config.txt.backup
+sudo nano /boot/config.txt
+
+#Put in disable_splash=1
+
+sudo cp /boot/cmdline.txt /boot/cmdline.txt.backup
+sudo nano /boot/cmdline.txt
+
+#add quiet splash
+
+sudo systemctl disable getty@tty1.service

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Splash</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto+Slab:700|Roboto:400" rel="stylesheet">
+  <style>
+    /* Full-screen gradient background and smooth fade-in */
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(135deg, #4285F4, #34A853);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Roboto Slab', serif;
+      color: #fff;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 4rem;
+      opacity: 0;
+      transform: translateY(-20px);
+      animation: fadeInSlideDown 1.5s forwards;
+    }
+    @keyframes fadeInSlideDown {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <script>
+    // After 3 seconds, move on to WiFi setup
+    setTimeout(function() {
+      window.location.href = '/wifi/';
+    }, 3000);
+  </script>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+</html>
