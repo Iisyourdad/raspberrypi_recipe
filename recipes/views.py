@@ -87,67 +87,70 @@ def splash(request):
         return redirect("index")
     return render(request, "recipes/splash.html")
 
-@csrf_exempt  # For simplicity—ensure proper CSRF handling in production.
+import os
+import tempfile
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
 def wifi_setup(request):
     if request.method == "POST":
         wifi_type = request.POST.get("wifi_type", "personal")
         ssid = request.POST.get("ssid")
-        config_text = ""
+        password = request.POST.get("password")
+
+        config_text = f'network={{\n  ssid="{ssid}"\n'
+
         if wifi_type == "personal":
-            password = request.POST.get("password")
-            config_text = f"""
-network={{
-    ssid="{ssid}"
-    psk="{password}"
-}}
-"""
+            config_text += f'  psk="{password}"\n}}\n'
         else:
-            # Enterprise configuration
             eap_method = request.POST.get("eap_method", "PEAP")
             identity = request.POST.get("identity", "")
-            password = request.POST.get("password")
-            config_text = f"""
-network={{
-    ssid="{ssid}"
-    key_mgmt=WPA-EAP
-    eap="{eap_method}"
-    identity="{identity}"
-    password="{password}"
-"""
-            # If a CA certificate is provided, save it and add to the config.
+            domain = request.POST.get("domain", "")
+            no_cert_required = request.POST.get("no_cert_required", False)
+
+            config_text += (
+                '  key_mgmt=WPA-EAP\n'
+                f'  eap="{eap_method}"\n'
+                f'  identity="{identity}"\n'
+                f'  password="{password}"\n'
+            )
+
+            if domain:
+                config_text += f'  domain_suffix_match="{domain}"\n'
+
             ca_cert = request.FILES.get("ca_cert")
-            if ca_cert:
+            if ca_cert and not no_cert_required:
                 cert_dir = "/etc/wpa_supplicant/certs"
-                if not os.path.exists(cert_dir):
-                    os.makedirs(cert_dir)
+                os.makedirs(cert_dir, exist_ok=True)
                 cert_path = os.path.join(cert_dir, ca_cert.name)
                 with open(cert_path, "wb") as f:
                     for chunk in ca_cert.chunks():
                         f.write(chunk)
-                config_text += f'    ca_cert="{cert_path}"\n'
-            config_text += "}\n"
+                config_text += f'  ca_cert="{cert_path}"\n'
+
+            config_text += '}\n'
 
         try:
-            # Write the config text to a temporary file
             with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp:
                 temp.write(config_text)
                 temp_filename = temp.name
 
-            # Call the helper script via sudo.
-            # Ensure that /usr/local/bin/update_wifi.sh exists and is configured in sudoers for the user 'tyler'
             command = f'sudo /usr/local/bin/update_wifi.sh {temp_filename}'
             os.system(command)
 
-            # Clean up the temporary file
             os.remove(temp_filename)
 
-            # Mark the device as configured.
             with open("/home/tyler/configured.flag", "w") as flag_file:
                 flag_file.write("configured")
+
             return redirect("configured")
         except Exception as e:
             return render(request, "recipes/wifi_setup.html", {"error": str(e)})
+
     return render(request, "recipes/wifi_setup.html")
+
+
 
 def configured(request):
     return render(request, "recipes/configured.html")
