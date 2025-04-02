@@ -1,1 +1,1 @@
-web: gunicorn westbrook_recipes.wsgi
+web: gunicorn westbrook_recipes.wsgi --log-file -
