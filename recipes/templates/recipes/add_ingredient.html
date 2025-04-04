@@ -7,10 +7,95 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
   <style>
-    /* Basic styles omitted for brevity. */
-    .shift-active {
-      background: #4285F4 !important;
-      border-color: #4285F4 !important;
+    body {
+      background: #f7f7f7;
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    nav {
+      width: 100%;
+      background: #dec773;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      margin: 0 15px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+    nav ul li a:hover {
+      color: #f0f0f0;
+    }
+    .form-container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 90%;
+      margin: 40px auto;
+    }
+    .form-container h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #555;
+    }
+    input[type="text"] {
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #4285F4, #34A853);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #34A853, #4285F4);
+    }
+    #confirmation-message {
+      background-color: #e8f0fe;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      text-align: center;
+      border-radius: 8px;
+      display: none;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -22,7 +107,6 @@
       <li><a href="{% url 'add_ingredient' %}">Add Ingredient</a></li>
     </ul>
   </nav>
-
   <div class="form-container">
     <h1>Add Ingredient</h1>
     <div id="confirmation-message">
@@ -35,139 +119,33 @@
       <button type="submit">Submit Ingredient</button>
     </form>
   </div>
-
-  <!-- SHIFT-capable On-Screen Keyboard -->
-  <div id="onscreen-keyboard" class="onscreen-keyboard">
-    <div class="keyboard-row">
-      <button class="key">Q</button>
-      <button class="key">W</button>
-      <button class="key">E</button>
-      <button class="key">R</button>
-      <button class="key">T</button>
-      <button class="key">Y</button>
-      <button class="key">U</button>
-      <button class="key">I</button>
-      <button class="key">O</button>
-      <button class="key">P</button>
-    </div>
-    <div class="keyboard-row">
-      <button class="key">A</button>
-      <button class="key">S</button>
-      <button class="key">D</button>
-      <button class="key">F</button>
-      <button class="key">G</button>
-      <button class="key">H</button>
-      <button class="key">J</button>
-      <button class="key">K</button>
-      <button class="key">L</button>
-    </div>
-    <div class="keyboard-row">
-      <button class="key shift-btn">Shift</button>
-      <button class="key">Z</button>
-      <button class="key">X</button>
-      <button class="key">C</button>
-      <button class="key">V</button>
-      <button class="key">B</button>
-      <button class="key">N</button>
-      <button class="key">M</button>
-      <button class="key" data-key="backspace">Backspace</button>
-    </div>
-    <div class="keyboard-row">
-      <button class="key" data-key="space">Space</button>
-      <button class="key" data-key="hide">Hide Keyboard</button>
-    </div>
-  </div>
-
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      // AJAX submission omitted for brevity...
-      // Show on-screen keyboard when "id_name" input is focused
-      const nameInput = document.getElementById('id_name');
-      if (nameInput) {
-        nameInput.addEventListener('focus', function() {
-          document.getElementById('onscreen-keyboard').style.display = 'block';
-        });
-      }
-    });
-
-    /* SHIFT Mode */
-    let isShiftActive = false;
-    const shiftBtn = document.querySelector('.shift-btn');
-    const allKeys = document.querySelectorAll('#onscreen-keyboard .key');
-
-    allKeys.forEach((keyButton) => {
-      keyButton.addEventListener('click', function() {
-        let activeElement = document.activeElement;
-        if (!activeElement || activeElement.id !== 'id_name') return;
-        const key = this.getAttribute('data-key') || this.innerText;
-
-        if (key.toLowerCase() === 'backspace') {
-          activeElement.value = activeElement.value.slice(0, -1);
-        } else if (key.toLowerCase() === 'space') {
-          activeElement.value += ' ';
-        } else if (key.toLowerCase() === 'hide') {
-          document.getElementById('onscreen-keyboard').style.display = 'none';
-        } else if (this.classList.contains('shift-btn')) {
-          isShiftActive = !isShiftActive;
-          toggleShiftMode(isShiftActive);
-        } else {
-          activeElement.value += key;
-          // If SHIFT was on for one letter, revert
-          if (isShiftActive && this !== shiftBtn) {
-            isShiftActive = false;
-            toggleShiftMode(false);
-          }
-        }
-        activeElement.focus();
+      const form = document.getElementById('ingredient-form');
+      form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(form);
+        fetch("", {
+          method: "POST",
+          body: formData,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => {
+          if (response.ok) return response.text();
+          else throw new Error("Submission failed");
+        })
+        .then(data => {
+          document.getElementById('confirmation-message').style.display = 'block';
+        })
+        .catch(error => console.error("Error submitting form:", error));
       });
-    });
-
-    function toggleShiftMode(enabled) {
-      shiftBtn.classList.toggle('shift-active', enabled);
-      allKeys.forEach((k) => {
-        if (!k.hasAttribute('data-key') && !k.classList.contains('shift-btn')) {
-          k.innerText = enabled ? k.innerText.toUpperCase() : k.innerText.toLowerCase();
+      document.addEventListener('click', function(e) {
+        const confirmationDiv = document.getElementById('confirmation-message');
+        if (confirmationDiv.style.display === 'block' && !confirmationDiv.contains(e.target)) {
+          confirmationDiv.style.display = 'none';
         }
       });
-    }
-
-    /* Close keyboard on outside click */
-    document.addEventListener('click', function(event) {
-      const keyboard = document.getElementById('onscreen-keyboard');
-      if (
-        keyboard.style.display !== 'none' &&
-        !keyboard.contains(event.target) &&
-        event.target.id !== 'id_name'
-      ) {
-        keyboard.style.display = 'none';
-      }
     });
-
-    /* Make the keyboard draggable */
-    (function() {
-      const keyboard = document.getElementById("onscreen-keyboard");
-      let isDragging = false, startX, startY, origX, origY;
-      keyboard.addEventListener("mousedown", function(e) {
-        if (e.target.classList.contains('key')) return;
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        origX = keyboard.offsetLeft;
-        origY = keyboard.offsetTop;
-        e.preventDefault();
-      });
-      document.addEventListener("mousemove", function(e) {
-        if (isDragging) {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          keyboard.style.left = (origX + dx) + "px";
-          keyboard.style.top = (origY + dy) + "px";
-        }
-      });
-      document.addEventListener("mouseup", function() {
-        isDragging = false;
-      });
-    })();
   </script>
 </body>
 </html>
