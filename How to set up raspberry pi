@@ -104,14 +104,24 @@ sudo systemctl disable getty@tty1.service
 sudo nano /usr/local/bin/update_wifi.sh
 
 """
-
 #!/bin/bash
-# This script receives one argument: the configuration text to append.
+# This script appends a new network configuration to wpa_supplicant.conf and reloads WiFi.
+
+if [ -z "$1" ]; then
+  echo "Error: No configuration provided."
+  exit 1
+fi
+
 CONFIG="$1"
-# Append the new network configuration.
+# Append the new network configuration to wpa_supplicant.conf
 echo "$CONFIG" >> /etc/wpa_supplicant/wpa_supplicant.conf
-# Reconfigure WiFi on wlan0.
+
+# Reconfigure WiFi on wlan0
 sudo /usr/sbin/wpa_cli -i wlan0 reconfigure
+
+echo "WiFi configuration updated."
+
+
 
 """
 
@@ -159,18 +169,16 @@ xinput set-button-map "xwayland-touch:14" 0 2 3
 chmod +x ~/disable_touch_tap.sh
 
 
+Install chrome extension
+
+https://chromewebstore.google.com/detail/scrollanywhere/jehmdpemhgfgjblpkilmeoafmkhbckhi
 
 
+sudo visudo
+"""
+tyler ALL=(root) NOPASSWD: /sbin/shutdown
+"""
 
-
-
-
-
-
-##put this in views.py
-
-
-#####
 
 
 

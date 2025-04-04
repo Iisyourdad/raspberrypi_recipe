@@ -13,6 +13,7 @@ urlpatterns = [
     path('toggle_favorite/<int:recipe_id>/', views.toggle_favorite, name='toggle_favorite'),
     path('favorites/', views.favorites, name='favorites'),
     path('test-404/', views.test_404, name='test_404'),
+    path('shutdown/', views.shutdown, name='shutdown'),
 ]
 
 if settings.DEBUG:

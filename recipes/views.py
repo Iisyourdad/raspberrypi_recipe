@@ -7,6 +7,8 @@ from .forms import RecipeForm, IngredientForm
 import os
 import tempfile
 from django.views.decorators.csrf import csrf_exempt
+import subprocess
+from django.http import HttpResponse
 
 def index(request):
     home_page = HomePage.objects.first()
@@ -87,70 +89,48 @@ def splash(request):
         return redirect("index")
     return render(request, "recipes/splash.html")
 
-import os
-import tempfile
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-
-@csrf_exempt
 def wifi_setup(request):
-    if request.method == "POST":
-        wifi_type = request.POST.get("wifi_type", "personal")
-        ssid = request.POST.get("ssid")
-        password = request.POST.get("password")
-
-        config_text = f'network={{\n  ssid="{ssid}"\n'
-
-        if wifi_type == "personal":
-            config_text += f'  psk="{password}"\n}}\n'
+    error = None
+    message = None
+    if request.method == 'POST':
+        connection_mode = request.POST.get('connection_mode', 'wifi')
+        if connection_mode == 'offline':
+            # Offline mode: Skip WiFi configuration
+            message = 'Offline mode selected. Skipping WiFi configuration.'
         else:
-            eap_method = request.POST.get("eap_method", "PEAP")
-            identity = request.POST.get("identity", "")
-            domain = request.POST.get("domain", "")
-            no_cert_required = request.POST.get("no_cert_required", False)
-
-            config_text += (
-                '  key_mgmt=WPA-EAP\n'
-                f'  eap="{eap_method}"\n'
-                f'  identity="{identity}"\n'
-                f'  password="{password}"\n'
-            )
-
-            if domain:
-                config_text += f'  domain_suffix_match="{domain}"\n'
-
-            ca_cert = request.FILES.get("ca_cert")
-            if ca_cert and not no_cert_required:
-                cert_dir = "/etc/wpa_supplicant/certs"
-                os.makedirs(cert_dir, exist_ok=True)
-                cert_path = os.path.join(cert_dir, ca_cert.name)
-                with open(cert_path, "wb") as f:
-                    for chunk in ca_cert.chunks():
-                        f.write(chunk)
-                config_text += f'  ca_cert="{cert_path}"\n'
-
-            config_text += '}\n'
-
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, mode="w") as temp:
-                temp.write(config_text)
-                temp_filename = temp.name
-
-            command = f'sudo /usr/local/bin/update_wifi.sh {temp_filename}'
-            os.system(command)
-
-            os.remove(temp_filename)
-
-            with open("/home/tyler/configured.flag", "w") as flag_file:
-                flag_file.write("configured")
-
-            return redirect("configured")
-        except Exception as e:
-            return render(request, "recipes/wifi_setup.html", {"error": str(e)})
-
-    return render(request, "recipes/wifi_setup.html")
-
-
+            wifi_type = request.POST.get('wifi_type', 'personal')
+            ssid = request.POST.get('ssid', '')
+            password = request.POST.get('password', '')
+            if wifi_type == 'personal':
+                config_text = f'\nnetwork={{\n    ssid="{ssid}"\n    psk="{password}"\n}}\n'
+            else:
+                eap_method = request.POST.get('eap_method', '')
+                identity = request.POST.get('identity', '')
+                config_text = (
+                    f'\nnetwork={{\n    ssid="{ssid}"\n'
+                    f'    key_mgmt=WPA-EAP\n    eap={eap_method}\n'
+                    f'    identity="{identity}"\n    password="{password}"\n}}\n'
+                )
+            try:
+                subprocess.run(["sudo", "/usr/local/bin/update_wifi.sh", config_text], check=True)
+                message = "WiFi configuration updated successfully."
+            except subprocess.CalledProcessError as e:
+                error = str(e)
+    return render(request, 'wifi_setup.html', {'error': error, 'message': message})
 
 def configured(request):
     return render(request, "recipes/configured.html")
+
+@csrf_exempt
+def shutdown(request):
+    """
+    This view shuts down the device when a POST request is received.
+    It runs 'sudo shutdown -h now' and returns a simple HTTP response.
+    """
+    if request.method == 'POST':
+        try:
+            subprocess.run(["sudo", "shutdown", "-h", "now"], check=True)
+            return HttpResponse("Shutting down", status=200)
+        except subprocess.CalledProcessError as e:
+            return HttpResponse("Error: " + str(e), status=500)
+    return HttpResponse("Method not allowed", status=405)

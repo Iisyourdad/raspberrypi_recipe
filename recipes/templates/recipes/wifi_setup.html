@@ -66,6 +66,11 @@
       text-align: center;
       margin-bottom: 1rem;
     }
+    .message {
+      color: #28a745;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
     .hidden {
       display: none;
     }
@@ -75,6 +80,13 @@
     }
   </style>
   <script>
+    // Toggle WiFi fields based on connection mode
+    function toggleFields() {
+      var connectionMode = document.querySelector('input[name="connection_mode"]:checked').value;
+      var wifiFields = document.getElementById("wifiFields");
+      wifiFields.style.display = (connectionMode === "offline") ? "none" : "block";
+    }
+    // Existing function for enterprise fields
     function toggleEnterpriseFields() {
       var wifiType = document.getElementById("wifi_type").value;
       var enterpriseFields = document.getElementById("enterpriseFields");
@@ -90,14 +102,14 @@
     function toggleCertUpload() {
       var eapMethod = document.getElementById("eap_method").value;
       var certUpload = document.getElementById("certUpload");
-      if (eapMethod === "TLS" || eapMethod === "TTLS") {
-        certUpload.style.display = "block";
-      } else {
-        certUpload.style.display = "none";
-      }
+      certUpload.style.display = (eapMethod === "TLS" || eapMethod === "TTLS") ? "block" : "none";
     }
     window.addEventListener('DOMContentLoaded', function() {
+      toggleFields();
       toggleEnterpriseFields();
+      document.querySelectorAll('input[name="connection_mode"]').forEach(function(elem) {
+        elem.addEventListener("change", toggleFields);
+      });
       document.getElementById("wifi_type").addEventListener('change', toggleEnterpriseFields);
       document.getElementById("eap_method").addEventListener("change", toggleCertUpload);
     });
@@ -109,39 +121,49 @@
     {% if error %}
       <p class="error">Error: {{ error }}</p>
     {% endif %}
+    {% if message %}
+      <p class="message">{{ message }}</p>
+    {% endif %}
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
-      <label for="wifi_type">WiFi Type:</label>
-      <select id="wifi_type" name="wifi_type">
-        <option value="personal">Personal</option>
-        <option value="enterprise">Enterprise</option>
-      </select>
 
-      <label for="ssid">SSID:</label>
-      <input type="text" id="ssid" name="ssid" placeholder="Enter network name" required>
+      <!-- Connection Mode Option -->
+      <label>Connection Mode:</label>
+      <input type="radio" id="mode_wifi" name="connection_mode" value="wifi" checked>
+      <label for="mode_wifi">WiFi</label>
+      <input type="radio" id="mode_offline" name="connection_mode" value="offline">
+      <label for="mode_offline">Connect without WiFi</label>
 
-      <div id="enterpriseFields" class="hidden">
-        <label for="eap_method">EAP Method:</label>
-        <select id="eap_method" name="eap_method">
-          <option value="PEAP">PEAP</option>
-          <option value="TLS">TLS</option>
-          <option value="TTLS">TTLS</option>
-          <option value="PWD">PWD</option>
+      <!-- WiFi Configuration Fields -->
+      <div id="wifiFields">
+        <label for="wifi_type">WiFi Type:</label>
+        <select id="wifi_type" name="wifi_type">
+          <option value="personal">Personal</option>
+          <option value="enterprise">Enterprise</option>
         </select>
-        <label for="identity">Identity:</label>
-        <input type="text" id="identity" name="identity" placeholder="Enter identity">
+
+        <label for="ssid">SSID:</label>
+        <input type="text" id="ssid" name="ssid" placeholder="Enter network name" required>
+
+        <div id="enterpriseFields" class="hidden">
+          <label for="eap_method">EAP Method:</label>
+          <select id="eap_method" name="eap_method">
+            <option value="PEAP">PEAP</option>
+            <option value="TLS">TLS</option>
+            <option value="TTLS">TTLS</option>
+            <option value="PWD">PWD</option>
+          </select>
+          <label for="identity">Identity:</label>
+          <input type="text" id="identity" name="identity" placeholder="Enter identity">
+        </div>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" placeholder="Enter password" required>
+
+        <div id="certUpload" class="hidden">
+          <label for="ca_cert">CA Certificate (Optional):</label>
+          <input type="file" id="ca_cert" name="ca_cert" accept=".pem,.der,.crt,.cer">
+        </div>
       </div>
-
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" placeholder="Enter password" required>
-
-      <div id="certUpload" class="hidden">
-        <label for="ca_cert">CA Certificate (Optional):</label>
-        <input type="file" id="ca_cert" name="ca_cert" accept=".pem,.der,.crt,.cer">
-      </div>
-
       <button type="submit">Connect</button>
     </form>
-  </div>
-</body>
-</html>

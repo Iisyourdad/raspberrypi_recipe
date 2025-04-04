@@ -97,6 +97,43 @@
       display: none;
       font-weight: 500;
     }
+
+    /* On-Screen Keyboard Styles - Dark Gray Theme */
+    .onscreen-keyboard {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 2000;
+      display: none;
+      max-width: 600px;
+      width: 90%;
+      cursor: move;
+    }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+    .key {
+      background: #555;
+      border: 1px solid #777;
+      border-radius: 5px;
+      margin: 2px;
+      padding: 10px 15px;
+      font-size: 1em;
+      cursor: pointer;
+      outline: none;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .key:hover {
+      background: #666;
+    }
   </style>
 </head>
 <body>
@@ -107,6 +144,7 @@
       <li><a href="{% url 'add_ingredient' %}">Add Ingredient</a></li>
     </ul>
   </nav>
+
   <div class="form-container">
     <h1>Add Ingredient</h1>
     <div id="confirmation-message">
@@ -119,8 +157,51 @@
       <button type="submit">Submit Ingredient</button>
     </form>
   </div>
+
+  <!-- On-Screen Keyboard -->
+  <div id="onscreen-keyboard" class="onscreen-keyboard">
+    <div class="keyboard-row">
+      <button class="key">Q</button>
+      <button class="key">W</button>
+      <button class="key">E</button>
+      <button class="key">R</button>
+      <button class="key">T</button>
+      <button class="key">Y</button>
+      <button class="key">U</button>
+      <button class="key">I</button>
+      <button class="key">O</button>
+      <button class="key">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key">A</button>
+      <button class="key">S</button>
+      <button class="key">D</button>
+      <button class="key">F</button>
+      <button class="key">G</button>
+      <button class="key">H</button>
+      <button class="key">J</button>
+      <button class="key">K</button>
+      <button class="key">L</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key">Z</button>
+      <button class="key">X</button>
+      <button class="key">C</button>
+      <button class="key">V</button>
+      <button class="key">B</button>
+      <button class="key">N</button>
+      <button class="key">M</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key" data-key="space">Space</button>
+      <button class="key" data-key="backspace">Backspace</button>
+      <button class="key" data-key="hide">Hide Keyboard</button>
+    </div>
+  </div>
+
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      // Handle form submission (via AJAX)
       const form = document.getElementById('ingredient-form');
       form.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -139,13 +220,85 @@
         })
         .catch(error => console.error("Error submitting form:", error));
       });
+
+      // Clicking outside the confirmation message hides it
       document.addEventListener('click', function(e) {
         const confirmationDiv = document.getElementById('confirmation-message');
         if (confirmationDiv.style.display === 'block' && !confirmationDiv.contains(e.target)) {
           confirmationDiv.style.display = 'none';
         }
       });
+
+      // Show on-screen keyboard when the name input is focused
+      // By default, Django sets the input's id to "id_name" if the field is named "name"
+      const nameInput = document.getElementById('id_name');
+      if (nameInput) {
+        nameInput.addEventListener('focus', function() {
+          document.getElementById('onscreen-keyboard').style.display = 'block';
+        });
+      }
     });
+
+    /* On-screen keyboard functionality */
+    document.querySelectorAll('#onscreen-keyboard .key').forEach(function(keyButton) {
+      keyButton.addEventListener('click', function() {
+        var key = this.getAttribute('data-key') || this.innerText;
+        // We'll assume only one text input here, the "name" field
+        var input = document.getElementById('id_name');
+        if (!input) return;
+
+        if (key.toLowerCase() === 'backspace') {
+          input.value = input.value.slice(0, -1);
+        } else if (key.toLowerCase() === 'space') {
+          input.value += ' ';
+        } else if (key.toLowerCase() === 'hide') {
+          document.getElementById('onscreen-keyboard').style.display = 'none';
+        } else {
+          input.value += key;
+        }
+        input.focus();
+      });
+    });
+
+    /* Close keyboard on outside click */
+    document.addEventListener('click', function(event) {
+      var keyboard = document.getElementById('onscreen-keyboard');
+      // If the keyboard is visible and the click isn't on the keyboard or the input, hide it
+      // Also allow the user to click inside the input without closing
+      var nameInput = document.getElementById('id_name');
+      if (
+        keyboard.style.display !== 'none' &&
+        !keyboard.contains(event.target) &&
+        event.target !== nameInput
+      ) {
+        keyboard.style.display = 'none';
+      }
+    });
+
+    /* Make the on-screen keyboard draggable */
+    (function() {
+      var keyboard = document.getElementById("onscreen-keyboard");
+      var isDragging = false, startX, startY, origX, origY;
+      keyboard.addEventListener("mousedown", function(e) {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        origX = keyboard.offsetLeft;
+        origY = keyboard.offsetTop;
+        e.preventDefault();
+      });
+      document.addEventListener("mousemove", function(e) {
+        if (isDragging) {
+          var dx = e.clientX - startX;
+          var dy = e.clientY - startY;
+          keyboard.style.left = (origX + dx) + "px";
+          keyboard.style.top = (origY + dy) + "px";
+        }
+      });
+      document.addEventListener("mouseup", function() {
+        isDragging = false;
+      });
+    })();
   </script>
 </body>
 </html>
