@@ -174,16 +174,6 @@ Install chrome extension
 https://chromewebstore.google.com/detail/scrollanywhere/jehmdpemhgfgjblpkilmeoafmkhbckhi
 
 
-sudo visudo
-"""
-tyler ALL=(root) NOPASSWD: /sbin/shutdown
-"""
-
-sudo nano /boot/config.txt
-
-"""
-disable_splash=1
-"""
 
 sudo nano /boot/cmdline.txt
 ###Remove any occurrence of the word "splash" and add "logo.nologo"

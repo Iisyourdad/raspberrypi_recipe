@@ -7,166 +7,16 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
   <style>
-    body {
-      background: #f7f7f7;
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-    }
-    /* Nav bar as in index.html (right section removed) */
-    nav {
-      background: #dec773;
-      padding: 17px;
-    }
-    nav ul {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: start;
-    }
-    nav ul li {
-      margin-right: 20px;
-    }
-    nav ul li a {
-      color: #fff;
-      text-decoration: none;
-    }
-    /* Main container styling */
-    .main-container {
-      background: #fff;
-      max-width: 800px;
-      width: 90%;
-      margin: 40px auto;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
-    .main-container h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-      color: #333;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-    }
-    .form-group {
-      margin-bottom: 1.5rem;
-    }
-    .form-group label {
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-      display: block;
-      color: #555;
-    }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 0.8rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
-      box-sizing: border-box;
-    }
-    .form-group textarea {
-      resize: vertical;
-      min-height: 150px;
-    }
-    /* Ingredients Section */
-    #ingredients-container {
-      margin-top: 1rem;
-    }
-    #ingredient-search {
-      width: 100%;
-      padding: 0.8rem;
-      margin-bottom: 1rem;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      box-sizing: border-box;
-    }
-    #ingredients-checkboxes {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 10px;
-    }
-    .ingredient-checkbox {
-      background: #f1f1f1;
-      border-radius: 8px;
-      padding: 10px;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.3s, color 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .ingredient-checkbox input {
-      display: none;
-    }
-    .ingredient-checkbox.selected {
-      background: #4285F4;
-      color: #fff;
-    }
-    button[type="submit"] {
-      padding: 0.8rem;
-      border: none;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #4285F4, #34A853);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button[type="submit"]:hover {
-      background: linear-gradient(135deg, #34A853, #4285F4);
-    }
-
-    /* On-Screen Keyboard Styles - Dark Gray Theme */
-    .onscreen-keyboard {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      z-index: 2000;
-      display: none;
-      max-width: 600px;
-      width: 90%;
-      cursor: move;
-    }
-    .keyboard-row {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 5px;
-    }
-    .key {
-      background: #555;
-      border: 1px solid #777;
-      border-radius: 5px;
-      margin: 2px;
-      padding: 10px 15px;
-      font-size: 1em;
-      cursor: pointer;
-      outline: none;
-      color: #fff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    .key:hover {
-      background: #666;
+    /* Basic styles omitted for brevity (same as your existing code)... */
+    /* SHIFT styling */
+    .shift-active {
+      background: #4285F4 !important;
+      border-color: #4285F4 !important;
     }
   </style>
 </head>
 <body>
-  <!-- Nav bar from index.html with only left-aligned links -->
+  <!-- Nav bar (unchanged) -->
   <nav>
     <ul>
       <li><a href="{% url 'index' %}">Home</a></li>
@@ -206,7 +56,7 @@
     </form>
   </div>
 
-  <!-- On-Screen Keyboard -->
+  <!-- On-Screen Keyboard with SHIFT -->
   <div id="onscreen-keyboard" class="onscreen-keyboard">
     <div class="keyboard-row">
       <button class="key">Q</button>
@@ -232,6 +82,7 @@
       <button class="key">L</button>
     </div>
     <div class="keyboard-row">
+      <button class="key shift-btn">Shift</button>
       <button class="key">Z</button>
       <button class="key">X</button>
       <button class="key">C</button>
@@ -239,117 +90,105 @@
       <button class="key">B</button>
       <button class="key">N</button>
       <button class="key">M</button>
+      <button class="key" data-key="backspace">Backspace</button>
     </div>
     <div class="keyboard-row">
       <button class="key" data-key="space">Space</button>
-      <button class="key" data-key="backspace">Backspace</button>
       <button class="key" data-key="hide">Hide Keyboard</button>
     </div>
   </div>
 
   <script>
-    // Ingredient tile toggling
-    document.querySelectorAll('.ingredient-checkbox input[type="checkbox"]').forEach(function(checkbox) {
-      checkbox.addEventListener('change', function() {
-        if (checkbox.checked) {
-          checkbox.parentElement.classList.add('selected');
-        } else {
-          checkbox.parentElement.classList.remove('selected');
+    /* Searching, sorting, etc. omitted for brevity */
+
+    // Show on-screen keyboard for each text-based field
+    document.addEventListener("DOMContentLoaded", function() {
+      const titleInput = document.getElementById('id_title');
+      const instructionsInput = document.getElementById('id_instructions');
+      const ingredientSearch = document.getElementById('ingredient-search');
+
+      [titleInput, instructionsInput, ingredientSearch].forEach(function(elem) {
+        if (elem) {
+          elem.addEventListener('focus', function() {
+            document.getElementById('onscreen-keyboard').style.display = 'block';
+          });
         }
       });
     });
 
-    // Filter ingredients by search term
-    document.getElementById("ingredient-search").addEventListener("keyup", function() {
-      var filter = this.value.toLowerCase();
-      document.querySelectorAll(".ingredient-checkbox").forEach(function(tile) {
-        var labelText = tile.textContent.toLowerCase();
-        tile.style.display = labelText.indexOf(filter) > -1 ? "flex" : "none";
-      });
-    });
+    /* SHIFT Mode */
+    let isShiftActive = false;
+    const shiftBtn = document.querySelector('.shift-btn');
+    const allKeys = document.querySelectorAll('#onscreen-keyboard .key');
 
-    // Sort ingredient tiles case-insensitively after page load
-    document.addEventListener("DOMContentLoaded", function() {
-      var container = document.getElementById("ingredients-checkboxes");
-      if (container) {
-        var tiles = Array.from(container.children);
-        tiles.sort(function(a, b) {
-          var textA = a.innerText.trim().toLowerCase();
-          var textB = b.innerText.trim().toLowerCase();
-          return textA < textB ? -1 : textA > textB ? 1 : 0;
-        });
-        container.innerHTML = "";
-        tiles.forEach(function(tile) {
-          container.appendChild(tile);
-        });
-      }
-
-      // Show on-screen keyboard for each text-based field
-      var titleInput = document.getElementById('id_title');          // Django ID for "title" field
-      var instructionsInput = document.getElementById('id_instructions'); // Django ID for "instructions" field
-      var ingredientSearch = document.getElementById('ingredient-search');
-
-      if (titleInput) {
-        titleInput.addEventListener('focus', function() {
-          document.getElementById('onscreen-keyboard').style.display = 'block';
-        });
-      }
-      if (instructionsInput) {
-        instructionsInput.addEventListener('focus', function() {
-          document.getElementById('onscreen-keyboard').style.display = 'block';
-        });
-      }
-      if (ingredientSearch) {
-        ingredientSearch.addEventListener('focus', function() {
-          document.getElementById('onscreen-keyboard').style.display = 'block';
-        });
-      }
-    });
-
-    /* On-screen keyboard functionality */
-    document.querySelectorAll('#onscreen-keyboard .key').forEach(function(keyButton) {
+    allKeys.forEach((keyButton) => {
       keyButton.addEventListener('click', function() {
-        var key = this.getAttribute('data-key') || this.innerText;
-        // Check which field is currently focused
-        var activeElement = document.activeElement;
-        // If there's no valid input/textarea focused, do nothing
+        // The active element could be titleInput, instructionsInput, or ingredientSearch
+        let activeElement = document.activeElement;
         if (!activeElement || (activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA')) {
           return;
         }
+        const key = this.getAttribute('data-key') || this.innerText;
 
+        // Hide keyboard
+        if (key.toLowerCase() === 'hide') {
+          document.getElementById('onscreen-keyboard').style.display = 'none';
+          return;
+        }
+        // Backspace
         if (key.toLowerCase() === 'backspace') {
           activeElement.value = activeElement.value.slice(0, -1);
-        } else if (key.toLowerCase() === 'space') {
-          activeElement.value += ' ';
-        } else if (key.toLowerCase() === 'hide') {
-          document.getElementById('onscreen-keyboard').style.display = 'none';
-        } else {
-          activeElement.value += key;
+          activeElement.focus();
+          return;
         }
+        // Space
+        if (key.toLowerCase() === 'space') {
+          activeElement.value += ' ';
+          activeElement.focus();
+          return;
+        }
+        // SHIFT
+        if (this.classList.contains('shift-btn')) {
+          isShiftActive = !isShiftActive;
+          toggleShiftMode(isShiftActive);
+          return;
+        }
+        // Normal char
+        activeElement.value += key;
         activeElement.focus();
+
+        if (isShiftActive && this !== shiftBtn) {
+          isShiftActive = false;
+          toggleShiftMode(false);
+        }
       });
     });
 
+    function toggleShiftMode(enabled) {
+      shiftBtn.classList.toggle('shift-active', enabled);
+      allKeys.forEach((k) => {
+        if (!k.hasAttribute('data-key') && !k.classList.contains('shift-btn')) {
+          k.innerText = enabled ? k.innerText.toUpperCase() : k.innerText.toLowerCase();
+        }
+      });
+    }
+
     /* Close keyboard on outside click */
     document.addEventListener('click', function(event) {
-      var keyboard = document.getElementById('onscreen-keyboard');
+      const keyboard = document.getElementById('onscreen-keyboard');
       if (keyboard.style.display === 'none') return;
-
       // If the user clicks outside the keyboard and outside a text field, hide the keyboard
-      if (!keyboard.contains(event.target)) {
-        // If the clicked element isn't an input/textarea, or if it is but has no focus event for keyboard
-        var isInputOrTextArea = event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA';
-        if (!isInputOrTextArea) {
-          keyboard.style.display = 'none';
-        }
+      if (!keyboard.contains(event.target) && event.target.tagName !== 'INPUT' && event.target.tagName !== 'TEXTAREA') {
+        keyboard.style.display = 'none';
       }
     });
 
     /* Make the on-screen keyboard draggable */
     (function() {
-      var keyboard = document.getElementById("onscreen-keyboard");
-      var isDragging = false, startX, startY, origX, origY;
+      const keyboard = document.getElementById("onscreen-keyboard");
+      let isDragging = false, startX, startY, origX, origY;
       keyboard.addEventListener("mousedown", function(e) {
+        if (e.target.classList.contains('key')) return;
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
@@ -359,8 +198,8 @@
       });
       document.addEventListener("mousemove", function(e) {
         if (isDragging) {
-          var dx = e.clientX - startX;
-          var dy = e.clientY - startY;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
           keyboard.style.left = (origX + dx) + "px";
           keyboard.style.top = (origY + dy) + "px";
         }

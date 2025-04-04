@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" style="background-color: #f1f1f1;">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>WiFi Setup</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
   <style>
-    /* Modern Google-style card */
-    body {
+    /* Fullscreen layout */
+    html, body {
       margin: 0;
-      height: 100vh;
-      background: #f5f5f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #f1f1f1;
       font-family: 'Roboto', sans-serif;
+      overflow: scroll;
+      -webkit-overflow-scrolling: touch;
     }
+    /* Center container horizontally & vertically */
     .container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       background: #fff;
       padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
       max-width: 400px;
       width: 90%;
-      text-align: left;
-      animation: fadeIn 1s ease-out;
+      animation: fadeIn 0.8s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -55%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
     }
     h2 {
       text-align: center;
@@ -71,48 +80,67 @@
       text-align: center;
       margin-bottom: 1rem;
     }
-    .hidden {
+    /* On-Screen Keyboard Styles (Dark Gray Theme) */
+    .onscreen-keyboard {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 2000;
       display: none;
+      max-width: 600px;
+      width: 90%;
+      cursor: move;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+    .key {
+      background: #555;
+      border: 1px solid #777;
+      border-radius: 5px;
+      margin: 2px;
+      padding: 10px 15px;
+      font-size: 1em;
+      cursor: pointer;
+      outline: none;
+      color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .key:hover {
+      background: #666;
+    }
+    /* Shift key styling */
+    .key.shift-active {
+      background: #4285F4;
+      color: #fff;
+      border-color: #4285F4;
     }
   </style>
   <script>
-    // Toggle WiFi fields based on connection mode
-    function toggleFields() {
-      var connectionMode = document.querySelector('input[name="connection_mode"]:checked').value;
-      var wifiFields = document.getElementById("wifiFields");
-      wifiFields.style.display = (connectionMode === "offline") ? "none" : "block";
-    }
-    // Existing function for enterprise fields
-    function toggleEnterpriseFields() {
-      var wifiType = document.getElementById("wifi_type").value;
-      var enterpriseFields = document.getElementById("enterpriseFields");
-      var certUpload = document.getElementById("certUpload");
-      if (wifiType === "enterprise") {
-        enterpriseFields.style.display = "block";
-        toggleCertUpload();
-      } else {
-        enterpriseFields.style.display = "none";
-        certUpload.style.display = "none";
-      }
-    }
-    function toggleCertUpload() {
-      var eapMethod = document.getElementById("eap_method").value;
-      var certUpload = document.getElementById("certUpload");
-      certUpload.style.display = (eapMethod === "TLS" || eapMethod === "TTLS") ? "block" : "none";
-    }
-    window.addEventListener('DOMContentLoaded', function() {
-      toggleFields();
-      toggleEnterpriseFields();
-      document.querySelectorAll('input[name="connection_mode"]').forEach(function(elem) {
-        elem.addEventListener("change", toggleFields);
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show on-screen keyboard when SSID input is focused
+      const ssidInput = document.getElementById("search-input");
+      ssidInput.addEventListener("focus", function() {
+        document.getElementById("onscreen-keyboard").style.display = "block";
       });
+
+      // Toggle enterprise fields when user picks "enterprise"
+      toggleEnterpriseFields();
       document.getElementById("wifi_type").addEventListener('change', toggleEnterpriseFields);
-      document.getElementById("eap_method").addEventListener("change", toggleCertUpload);
     });
+
+    function toggleEnterpriseFields() {
+      const wifiType = document.getElementById("wifi_type").value;
+      const enterpriseFields = document.getElementById("enterpriseFields");
+      enterpriseFields.style.display = (wifiType === "enterprise") ? "block" : "none";
+    }
   </script>
 </head>
 <body>
@@ -127,43 +155,187 @@
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
 
-      <!-- Connection Mode Option -->
-      <label>Connection Mode:</label>
-      <input type="radio" id="mode_wifi" name="connection_mode" value="wifi" checked>
-      <label for="mode_wifi">WiFi</label>
-      <input type="radio" id="mode_offline" name="connection_mode" value="offline">
-      <label for="mode_offline">Connect without WiFi</label>
+      <!-- WiFi Type Selection -->
+      <label for="wifi_type">WiFi Type:</label>
+      <select id="wifi_type" name="wifi_type">
+        <option value="personal">Personal</option>
+        <option value="enterprise">WPA2 Enterprise</option>
+      </select>
 
-      <!-- WiFi Configuration Fields -->
-      <div id="wifiFields">
-        <label for="wifi_type">WiFi Type:</label>
-        <select id="wifi_type" name="wifi_type">
-          <option value="personal">Personal</option>
-          <option value="enterprise">Enterprise</option>
+      <!-- SSID (search-input triggers the keyboard) -->
+      <label for="search-input">SSID:</label>
+      <input type="text" id="search-input" name="ssid" placeholder="Enter network name" required>
+
+      <!-- Password -->
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" placeholder="Enter password" required>
+
+      <!-- Enterprise Fields -->
+      <div id="enterpriseFields" style="display:none;">
+        <label for="identity">Username (Identity):</label>
+        <input type="text" id="identity" name="identity" placeholder="Enter username">
+
+        <label for="domain">Domain:</label>
+        <input type="text" id="domain" name="domain" placeholder="e.g., tamu.edu">
+
+        <label for="eap_method">EAP Method:</label>
+        <select id="eap_method" name="eap_method">
+          <option value="PEAP" selected>PEAP</option>
+          <option value="TLS">TLS</option>
+          <option value="TTLS">TTLS</option>
+          <option value="PWD">PWD</option>
         </select>
-
-        <label for="ssid">SSID:</label>
-        <input type="text" id="ssid" name="ssid" placeholder="Enter network name" required>
-
-        <div id="enterpriseFields" class="hidden">
-          <label for="eap_method">EAP Method:</label>
-          <select id="eap_method" name="eap_method">
-            <option value="PEAP">PEAP</option>
-            <option value="TLS">TLS</option>
-            <option value="TTLS">TTLS</option>
-            <option value="PWD">PWD</option>
-          </select>
-          <label for="identity">Identity:</label>
-          <input type="text" id="identity" name="identity" placeholder="Enter identity">
-        </div>
-
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" placeholder="Enter password" required>
-
-        <div id="certUpload" class="hidden">
-          <label for="ca_cert">CA Certificate (Optional):</label>
-          <input type="file" id="ca_cert" name="ca_cert" accept=".pem,.der,.crt,.cer">
-        </div>
       </div>
+
       <button type="submit">Connect</button>
     </form>
+  </div>
+
+  <!-- On-Screen Keyboard with SHIFT button -->
+  <div id="onscreen-keyboard" class="onscreen-keyboard">
+    <div class="keyboard-row">
+      <button class="key">Q</button>
+      <button class="key">W</button>
+      <button class="key">E</button>
+      <button class="key">R</button>
+      <button class="key">T</button>
+      <button class="key">Y</button>
+      <button class="key">U</button>
+      <button class="key">I</button>
+      <button class="key">O</button>
+      <button class="key">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key">A</button>
+      <button class="key">S</button>
+      <button class="key">D</button>
+      <button class="key">F</button>
+      <button class="key">G</button>
+      <button class="key">H</button>
+      <button class="key">J</button>
+      <button class="key">K</button>
+      <button class="key">L</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key shift-btn">Shift</button>
+      <button class="key">Z</button>
+      <button class="key">X</button>
+      <button class="key">C</button>
+      <button class="key">V</button>
+      <button class="key">B</button>
+      <button class="key">N</button>
+      <button class="key">M</button>
+      <button class="key" data-key="backspace">Backspace</button>
+    </div>
+    <div class="keyboard-row">
+      <button class="key" data-key="space">Space</button>
+      <button class="key" data-key="hide">Hide Keyboard</button>
+    </div>
+  </div>
+
+  <script>
+    // SHIFT Mode
+    let isShiftActive = false;
+
+    // On-screen keyboard functionality
+    const keys = document.querySelectorAll('#onscreen-keyboard .key');
+    const shiftBtn = document.querySelector('.shift-btn');
+
+    keys.forEach((keyButton) => {
+      keyButton.addEventListener('click', function() {
+        const searchInput = document.getElementById('search-input');
+        if (!searchInput) return;
+
+        let key = this.getAttribute('data-key') || this.innerText;
+
+        // Hide keyboard
+        if (key.toLowerCase() === 'hide') {
+          document.getElementById('onscreen-keyboard').style.display = 'none';
+          return;
+        }
+        // Backspace
+        if (key.toLowerCase() === 'backspace') {
+          searchInput.value = searchInput.value.slice(0, -1);
+          searchInput.focus();
+          return;
+        }
+        // Space
+        if (key.toLowerCase() === 'space') {
+          searchInput.value += ' ';
+          searchInput.focus();
+          return;
+        }
+        // Shift
+        if (this.classList.contains('shift-btn')) {
+          isShiftActive = !isShiftActive;
+          toggleShiftMode(isShiftActive);
+          return;
+        }
+        // Normal character
+        searchInput.value += key;
+        searchInput.focus();
+
+        // After typing one letter with Shift, revert to lowercase if you prefer
+        if (isShiftActive && this !== shiftBtn) {
+          isShiftActive = false;
+          toggleShiftMode(false);
+        }
+      });
+    });
+
+    // Toggle all alpha keys' case
+    function toggleShiftMode(shiftEnabled) {
+      shiftBtn.classList.toggle('shift-active', shiftEnabled);
+      const alphaKeys = document.querySelectorAll('#onscreen-keyboard .key:not([data-key])');
+      alphaKeys.forEach((btn) => {
+        if (!btn.classList.contains('shift-btn') && !btn.hasAttribute('data-key')) {
+          btn.innerText = shiftEnabled
+            ? btn.innerText.toUpperCase()
+            : btn.innerText.toLowerCase();
+        }
+      });
+    }
+
+    // Hide the keyboard when clicking anywhere else
+    document.addEventListener('click', function(event) {
+      const keyboard = document.getElementById('onscreen-keyboard');
+      const ssidInput = document.getElementById('search-input');
+      if (
+        keyboard.style.display !== 'none' &&
+        !keyboard.contains(event.target) &&
+        event.target !== ssidInput
+      ) {
+        keyboard.style.display = 'none';
+      }
+    });
+
+    // Make the keyboard draggable
+    (function() {
+      const keyboard = document.getElementById("onscreen-keyboard");
+      let isDragging = false, startX, startY, origX, origY;
+
+      keyboard.addEventListener("mousedown", function(e) {
+        // Ignore dragging when clicking actual keys
+        if (e.target.classList.contains('key')) return;
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        origX = keyboard.offsetLeft;
+        origY = keyboard.offsetTop;
+        e.preventDefault();
+      });
+      document.addEventListener("mousemove", function(e) {
+        if (isDragging) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          keyboard.style.left = (origX + dx) + "px";
+          keyboard.style.top = (origY + dy) + "px";
+        }
+      });
+      document.addEventListener("mouseup", function() {
+        isDragging = false;
+      });
+    })();
+  </script>
+</body>
+</html>

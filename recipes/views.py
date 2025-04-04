@@ -116,7 +116,7 @@ def wifi_setup(request):
                 message = "WiFi configuration updated successfully."
             except subprocess.CalledProcessError as e:
                 error = str(e)
-    return render(request, 'wifi_setup.html', {'error': error, 'message': message})
+    return render(request, 'recipes/wifi_setup.html', {'error': error, 'message': message})
 
 def configured(request):
     return render(request, "recipes/configured.html")

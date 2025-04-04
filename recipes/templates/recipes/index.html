@@ -257,6 +257,11 @@
     .key:hover {
       background: #666;
     }
+    /* Shift styling */
+    .shift-active {
+      background: #4285F4 !important;
+      border-color: #4285F4 !important;
+    }
   </style>
 </head>
 <body>
@@ -348,7 +353,7 @@
     </div> <!-- end of #child -->
   </div> <!-- end of #parent -->
 
-  <!-- On-Screen Keyboard -->
+  <!-- On-Screen Keyboard with SHIFT support -->
   <div id="onscreen-keyboard" class="onscreen-keyboard">
     <div class="keyboard-row">
       <button class="key">Q</button>
@@ -374,6 +379,7 @@
       <button class="key">L</button>
     </div>
     <div class="keyboard-row">
+      <button class="key shift-btn">Shift</button>
       <button class="key">Z</button>
       <button class="key">X</button>
       <button class="key">C</button>
@@ -381,10 +387,10 @@
       <button class="key">B</button>
       <button class="key">N</button>
       <button class="key">M</button>
+      <button class="key" data-key="backspace">Backspace</button>
     </div>
     <div class="keyboard-row">
       <button class="key" data-key="space">Space</button>
-      <button class="key" data-key="backspace">Backspace</button>
       <button class="key" data-key="hide">Hide Keyboard</button>
     </div>
   </div>
@@ -394,7 +400,6 @@
     function turnOffDisplay() {
       var overlay = document.getElementById("display-off-overlay");
       overlay.style.display = "block";
-      // Set the default message and start the bouncing animation (see below)
       document.querySelector("#display-overlay-content .overlay-text").innerText = "Touch anywhere to turn on display";
     }
     function turnOnDisplay() {
@@ -449,30 +454,68 @@
       });
     });
 
-    /* On-screen keyboard functionality */
-    document.querySelectorAll('#onscreen-keyboard .key').forEach(function(keyButton) {
+    /* SHIFT Mode */
+    let isShiftActive = false;
+    const shiftBtn = document.querySelector('.shift-btn');
+    const allKeys = document.querySelectorAll('#onscreen-keyboard .key');
+
+    allKeys.forEach((keyButton) => {
       keyButton.addEventListener('click', function() {
-        var key = this.getAttribute('data-key') || this.innerText;
-        var input = document.getElementById('search-input');
+        const input = document.getElementById('search-input');
+        if (!input) return;
+
+        const key = this.getAttribute('data-key') || this.innerText;
+
+        // Hide keyboard
+        if (key.toLowerCase() === 'hide') {
+          document.getElementById('onscreen-keyboard').style.display = 'none';
+          return;
+        }
+        // Backspace
         if (key.toLowerCase() === 'backspace') {
           input.value = input.value.slice(0, -1);
-        } else if (key.toLowerCase() === 'space') {
-          input.value += ' ';
-        } else if (key.toLowerCase() === 'hide') {
-          // Hides the keyboard
-          document.getElementById('onscreen-keyboard').style.display = 'none';
-        } else {
-          input.value += key;
+          input.focus();
+          return;
         }
+        // Space
+        if (key.toLowerCase() === 'space') {
+          input.value += ' ';
+          input.focus();
+          return;
+        }
+        // SHIFT
+        if (this.classList.contains('shift-btn')) {
+          isShiftActive = !isShiftActive;
+          toggleShiftMode(isShiftActive);
+          return;
+        }
+        // Normal character
+        input.value += key;
         input.focus();
+
+        // If SHIFT was active for a single letter, revert after
+        if (isShiftActive && this !== shiftBtn) {
+          isShiftActive = false;
+          toggleShiftMode(false);
+        }
       });
     });
+
+    // Toggle SHIFT mode
+    function toggleShiftMode(enabled) {
+      shiftBtn.classList.toggle('shift-active', enabled);
+      allKeys.forEach((k) => {
+        if (!k.hasAttribute('data-key') && !k.classList.contains('shift-btn')) {
+          // Switch letter case
+          k.innerText = enabled ? k.innerText.toUpperCase() : k.innerText.toLowerCase();
+        }
+      });
+    }
 
     /* Close keyboard on outside click */
     document.addEventListener('click', function(event) {
       var keyboard = document.getElementById('onscreen-keyboard');
       var searchInput = document.getElementById('search-input');
-      // If the keyboard is visible and the click isn't on the keyboard or the search input, hide it
       if (keyboard.style.display !== 'none' && !keyboard.contains(event.target) && event.target !== searchInput) {
         keyboard.style.display = 'none';
       }
@@ -480,9 +523,12 @@
 
     /* Make the on-screen keyboard draggable */
     (function() {
-      var keyboard = document.getElementById("onscreen-keyboard");
-      var isDragging = false, startX, startY, origX, origY;
+      const keyboard = document.getElementById("onscreen-keyboard");
+      let isDragging = false, startX, startY, origX, origY;
+
       keyboard.addEventListener("mousedown", function(e) {
+        // Don’t drag when clicking actual keys
+        if (e.target.classList.contains('key')) return;
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
