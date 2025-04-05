@@ -7,16 +7,18 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
   <style>
-    /* Ensure full viewport height and enable scrolling */
+    /* Force html and body to fill the viewport */
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
-      overflow-y: auto;
     }
     body {
       background: #f7f7f7;
       font-family: 'Roboto', sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
     }
     /* Nav bar remains at the top */
     nav {
@@ -40,12 +42,13 @@
       color: #fff;
       text-decoration: none;
     }
-    /* Main container styling without flex layout */
+    /* Main container styling */
     .main-container {
       background: #fff;
       width: 90%;
       max-width: 800px;
-      margin: 40px auto;
+      flex: 1; /* fills remaining space */
+      margin: 40px auto 0; /* top margin only, to keep nav at top */
       padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
@@ -53,8 +56,13 @@
     }
     .main-container h1 {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 0.5rem;
       color: #333;
+    }
+    .main-container p {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #555;
     }
     form {
       display: flex;
@@ -149,6 +157,13 @@
   </nav>
   <div class="main-container">
     <h1>Add Recipe</h1>
+    {% if system_ip %}
+      <p>
+        Please use a keyboard and mouse to add recipes or go to Google on another computer and type in {{ system_ip }}
+      </p>
+    {% else %}
+      <p>Please use a keyboard and mouse to add recipes</p>
+    {% endif %}
     <form action="" method="POST" enctype="multipart/form-data">
       {% csrf_token %}
       {{ form.media }}
@@ -175,7 +190,7 @@
     </form>
   </div>
   <script>
-    // Toggle "selected" class for ingredient checkboxes
+    // Toggle "selected" class when an ingredient checkbox changes state
     document.querySelectorAll('.ingredient-checkbox input[type="checkbox"]').forEach(function(checkbox) {
       checkbox.addEventListener('change', function() {
         if (checkbox.checked) {
