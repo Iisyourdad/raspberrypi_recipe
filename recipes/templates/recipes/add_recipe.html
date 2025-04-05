@@ -17,6 +17,7 @@
       background: #f7f7f7;
       font-family: 'Roboto', sans-serif;
       overflow-y: auto;
+      padding-bottom: 50px; /* Added to ensure the bottom isn't cut off */
     }
     /* Nav bar as in index.html */
     nav {
@@ -47,9 +48,11 @@
       width: 90%;
       margin: 40px auto;
       padding: 2rem;
+      padding-top: 1px; /* Added to prevent margin collapse */
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
     }
+
     .main-container h1 {
       text-align: center;
       margin-bottom: 2rem;
