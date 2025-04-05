@@ -7,20 +7,18 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
   <style>
-    /* Force html and body to fill the viewport */
+    /* Ensure full viewport height and enable scrolling */
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
+      overflow-y: auto;
     }
     body {
       background: #f7f7f7;
       font-family: 'Roboto', sans-serif;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
     }
-    /* Nav bar as in index.html */
+    /* Nav bar remains at the top */
     nav {
       background: #dec773;
       padding: 17px;
@@ -42,13 +40,12 @@
       color: #fff;
       text-decoration: none;
     }
-    /* Main container styling */
+    /* Main container styling without flex layout */
     .main-container {
       background: #fff;
       width: 90%;
       max-width: 800px;
-      flex: 1; /* fills remaining space */
-      margin: 40px auto 0; /* top margin only, to keep nav at top */
+      margin: 40px auto;
       padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.1);
@@ -99,7 +96,6 @@
       border-radius: 8px;
       box-sizing: border-box;
     }
-    /* Removed fixed height and overflow to make ingredients part of unified scroll */
     #ingredients-checkboxes {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -179,7 +175,7 @@
     </form>
   </div>
   <script>
-    // Toggle "selected" class when an ingredient checkbox changes state
+    // Toggle "selected" class for ingredient checkboxes
     document.querySelectorAll('.ingredient-checkbox input[type="checkbox"]').forEach(function(checkbox) {
       checkbox.addEventListener('change', function() {
         if (checkbox.checked) {
