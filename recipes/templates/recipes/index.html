@@ -601,14 +601,7 @@
           isDragging = false;
         });
       })();
-      // Hide the keyboard if the user clicks anywhere outside the keyboard and search input.
-      document.addEventListener('click', function(e) {
-        const keyboard = document.getElementById("onscreen-keyboard");
-        const searchInput = document.getElementById("search-input");
-        if (keyboard && !keyboard.contains(e.target) && e.target !== searchInput) {
-          keyboard.style.display = "none";
-        }
-      });
+      // Note: Removed the click listener that hid the keyboard when clicking outside.
       // Bouncing DVD Animation for Display-Off Overlay
       (function() {
         var overlayContent = document.getElementById("display-overlay-content");
