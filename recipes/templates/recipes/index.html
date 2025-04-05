@@ -423,7 +423,7 @@
         <button class="key">$</button>
         <button class="key">%</button>
         <button class="key">^</button>
-        <button class="key">&amp;</button>
+        <button class="key">&</button>
         <button class="key">*</button>
         <button class="key">(</button>
         <button class="key">)</button>
@@ -436,8 +436,8 @@
         <button class="key">|</button>
         <button class="key">:</button>
         <button class="key">"</button>
-        <button class="key">&lt;</button>
-        <button class="key">&gt;</button>
+        <button class="key"><</button>
+        <button class="key">></button>
         <button class="key">?</button>
       </div>
       <div class="keyboard-row">
@@ -448,118 +448,206 @@
   </div>
 
   <script>
-    // Show keyboard when the search input is focused.
-    document.addEventListener("focusin", function(e) {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
-        document.getElementById("onscreen-keyboard").style.display = "block";
+    // Turn Off Display (Screensaver with Bouncing DVD)
+    function turnOffDisplay() {
+      var overlay = document.getElementById("display-off-overlay");
+      overlay.style.display = "block";
+      document.querySelector("#display-overlay-content .overlay-text").innerText = "Touch anywhere to turn on display";
+    }
+
+    function turnOnDisplay() {
+      document.getElementById("display-off-overlay").style.display = "none";
+    }
+
+    // Shutdown Device: Show static overlay, then issue shutdown after 5 seconds
+    function shutdownDevice() {
+      var overlay = document.getElementById("shutdown-overlay");
+      overlay.style.display = "block";
+      setTimeout(function() {
+        fetch('/shutdown/', { method: 'POST' })
+          .then(response => console.log("Shutdown command issued"))
+          .catch(error => console.error("Error issuing shutdown:", error));
+      }, 5000);
+    }
+
+    // Smooth scroll for recipes section
+    function smoothScrollContainer(container, target, duration) {
+      var start = container.scrollTop;
+      var change = target - start;
+      var startTime = performance.now();
+      function easeInOutQuad(t) {
+        return t < 0.5 ? 2*t*t : -1 + (4 - 2*t)*t;
+      }
+      function animateScroll(currentTime) {
+        var elapsed = currentTime - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        var easedProgress = easeInOutQuad(progress);
+        container.scrollTop = start + change * easedProgress;
+        if (elapsed < duration) {
+          requestAnimationFrame(animateScroll);
+        }
+      }
+      requestAnimationFrame(animateScroll);
+    }
+
+    function scrollToRecipes() {
+      var recipesSection = document.getElementById("recipes-section");
+      var scrollContainer = document.getElementById("child");
+      if (recipesSection && scrollContainer) {
+        smoothScrollContainer(scrollContainer, recipesSection.offsetTop, 800);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Show keyboard when the search input is focused
+      document.addEventListener("focusin", function(e) {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+          document.getElementById("onscreen-keyboard").style.display = "block";
+        }
+      });
+
+      // SHIFT mode for the alphabet panel only
+      let isShiftActive = false;
+      const shiftBtn = document.querySelector('.shift-btn');
+      const alphabetKeys = document.querySelectorAll('#alphabet-panel .key');
+      alphabetKeys.forEach((btn) => {
+        btn.addEventListener('click', function() {
+          let searchInput = document.getElementById("search-input");
+          if (!searchInput) return;
+          const key = this.getAttribute('data-key') || this.innerText;
+          if (key.toLowerCase() === "hide keyboard") {
+            document.getElementById("onscreen-keyboard").style.display = "none";
+            return;
+          }
+          if (key.toLowerCase() === "backspace") {
+            searchInput.value = searchInput.value.slice(0, -1);
+            searchInput.focus();
+            return;
+          }
+          if (key.toLowerCase() === "space") {
+            searchInput.value += " ";
+            searchInput.focus();
+            return;
+          }
+          if (this.classList.contains("shift-btn")) {
+            isShiftActive = !isShiftActive;
+            toggleShiftMode(isShiftActive);
+            return;
+          }
+          searchInput.value += key;
+          searchInput.focus();
+          if (isShiftActive && this !== shiftBtn) {
+            isShiftActive = false;
+            toggleShiftMode(false);
+          }
+        });
+      });
+
+      function toggleShiftMode(enabled) {
+        shiftBtn.classList.toggle("shift-active", enabled);
+        document.querySelectorAll("#alphabet-panel .key:not([data-key])").forEach((k) => {
+          k.innerText = enabled ? k.innerText.toUpperCase() : k.innerText.toLowerCase();
+        });
+      }
+
+      // Handle keys in the symbols panel
+      document.querySelectorAll("#symbols-panel .key").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          let searchInput = document.getElementById("search-input");
+          if (!searchInput) return;
+          const key = this.getAttribute("data-key") || this.innerText;
+          if (key.toLowerCase() === "hide keyboard") {
+            document.getElementById("onscreen-keyboard").style.display = "none";
+            return;
+          }
+          if (key.toLowerCase() === "backspace") {
+            searchInput.value = searchInput.value.slice(0, -1);
+            searchInput.focus();
+            return;
+          }
+          if (key.toLowerCase() === "space") {
+            searchInput.value += " ";
+            searchInput.focus();
+            return;
+          }
+          // For symbols, simply type the key
+          searchInput.value += key;
+          searchInput.focus();
+        });
+      });
+
+      // Toggle between alphabet and symbols panels
+      document.getElementById("toggle-symbols-btn").addEventListener("click", function() {
+        document.getElementById("alphabet-panel").style.display = "none";
+        document.getElementById("symbols-panel").style.display = "block";
+      });
+      document.getElementById("toggle-alphabet-btn").addEventListener("click", function() {
+        document.getElementById("symbols-panel").style.display = "none";
+        document.getElementById("alphabet-panel").style.display = "block";
+      });
+
+      // Draggable keyboard
+      (function() {
+        const keyboard = document.getElementById("onscreen-keyboard");
+        let isDragging = false, startX, startY, origX, origY;
+        keyboard.addEventListener("mousedown", function(e) {
+          if (e.target.classList.contains("key")) return;
+          isDragging = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          origX = keyboard.offsetLeft;
+          origY = keyboard.offsetTop;
+          e.preventDefault();
+        });
+        document.addEventListener("mousemove", function(e) {
+          if (isDragging) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            keyboard.style.left = (origX + dx) + "px";
+            keyboard.style.top = (origY + dy) + "px";
+          }
+        });
+        document.addEventListener("mouseup", function() {
+          isDragging = false;
+        });
+      })();
+
+      // Bouncing DVD Animation for Display-Off Overlay
+      (function() {
+        var overlayContent = document.getElementById("display-overlay-content");
+        var container = document.getElementById("display-off-overlay");
+        var velocityX = (Math.random() * 0.25 + 0.5) * (Math.random() < 0.5 ? 1 : -1);
+        var velocityY = (Math.random() * 0.25 + 0.5) * (Math.random() < 0.5 ? 1 : -1);
+        var posX = 0, posY = 0;
+        function animateOverlayContent() {
+          if (container.style.display === "block") {
+            var containerWidth = container.clientWidth;
+            var containerHeight = container.clientHeight;
+            var contentWidth = overlayContent.offsetWidth;
+            var contentHeight = overlayContent.offsetHeight;
+            posX += velocityX;
+            posY += velocityY;
+            if (posX <= 0 || posX + contentWidth >= containerWidth) {
+              velocityX = -velocityX;
+              posX = Math.max(0, Math.min(posX, containerWidth - contentWidth));
+            }
+            if (posY <= 0 || posY + contentHeight >= containerHeight) {
+              velocityY = -velocityY;
+              posY = Math.max(0, Math.min(posY, containerHeight - contentHeight));
+            }
+            overlayContent.style.left = posX + "px";
+            overlayContent.style.top = posY + "px";
+          }
+          requestAnimationFrame(animateOverlayContent);
+        }
+        requestAnimationFrame(animateOverlayContent);
+      })();
+
+      // Scroll to recipes if there's a search query
+      if (window.location.search.indexOf("q=") !== -1) {
+        setTimeout(scrollToRecipes, 300);
       }
     });
-    // Do not automatically hide the keyboard on click outside.
-    // Instead, only the "Hide Keyboard" key will hide it.
-
-    // SHIFT mode for the alphabet panel only.
-    let isShiftActive = false;
-    const shiftBtn = document.querySelector('.shift-btn');
-    const alphabetKeys = document.querySelectorAll('#alphabet-panel .key');
-    alphabetKeys.forEach((btn) => {
-      btn.addEventListener('click', function() {
-        let searchInput = document.getElementById("search-input");
-        if (!searchInput) return;
-        const key = this.getAttribute('data-key') || this.innerText;
-        if (key.toLowerCase() === "hide keyboard") {
-          document.getElementById("onscreen-keyboard").style.display = "none";
-          return;
-        }
-        if (key.toLowerCase() === "backspace") {
-          searchInput.value = searchInput.value.slice(0, -1);
-          searchInput.focus();
-          return;
-        }
-        if (key.toLowerCase() === "space") {
-          searchInput.value += " ";
-          searchInput.focus();
-          return;
-        }
-        if (this.classList.contains("shift-btn")) {
-          isShiftActive = !isShiftActive;
-          toggleShiftMode(isShiftActive);
-          return;
-        }
-        searchInput.value += key;
-        searchInput.focus();
-        if (isShiftActive && this !== shiftBtn) {
-          isShiftActive = false;
-          toggleShiftMode(false);
-        }
-      });
-    });
-    function toggleShiftMode(enabled) {
-      shiftBtn.classList.toggle("shift-active", enabled);
-      document.querySelectorAll("#alphabet-panel .key:not([data-key])").forEach((k) => {
-        k.innerText = enabled ? k.innerText.toUpperCase() : k.innerText.toLowerCase();
-      });
-    }
-    // Handle keys in the symbols panel.
-    document.querySelectorAll("#symbols-panel .key").forEach(function(btn) {
-      btn.addEventListener("click", function() {
-        let searchInput = document.getElementById("search-input");
-        if (!searchInput) return;
-        const key = this.getAttribute("data-key") || this.innerText;
-        if (key.toLowerCase() === "hide keyboard") {
-          document.getElementById("onscreen-keyboard").style.display = "none";
-          return;
-        }
-        if (key.toLowerCase() === "backspace") {
-          searchInput.value = searchInput.value.slice(0, -1);
-          searchInput.focus();
-          return;
-        }
-        if (key.toLowerCase() === "space") {
-          searchInput.value += " ";
-          searchInput.focus();
-          return;
-        }
-        // For symbols, simply type the key.
-        searchInput.value += key;
-        searchInput.focus();
-      });
-    });
-
-    // Toggle between alphabet and symbols panels.
-    document.getElementById("toggle-symbols-btn").addEventListener("click", function() {
-      document.getElementById("alphabet-panel").style.display = "none";
-      document.getElementById("symbols-panel").style.display = "block";
-    });
-    document.getElementById("toggle-alphabet-btn").addEventListener("click", function() {
-      document.getElementById("symbols-panel").style.display = "none";
-      document.getElementById("alphabet-panel").style.display = "block";
-    });
-
-    // Draggable keyboard.
-    (function() {
-      const keyboard = document.getElementById("onscreen-keyboard");
-      let isDragging = false, startX, startY, origX, origY;
-      keyboard.addEventListener("mousedown", function(e) {
-        if (e.target.classList.contains("key")) return;
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        origX = keyboard.offsetLeft;
-        origY = keyboard.offsetTop;
-        e.preventDefault();
-      });
-      document.addEventListener("mousemove", function(e) {
-        if (isDragging) {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          keyboard.style.left = (origX + dx) + "px";
-          keyboard.style.top = (origY + dy) + "px";
-        }
-      });
-      document.addEventListener("mouseup", function() {
-        isDragging = false;
-      });
-    })();
   </script>
 </body>
 </html>
