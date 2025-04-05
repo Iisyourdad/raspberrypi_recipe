@@ -423,7 +423,7 @@
         <button class="key">$</button>
         <button class="key">%</button>
         <button class="key">^</button>
-        <button class="key">&</button>
+        <button class="key">&amp;</button>
         <button class="key">*</button>
         <button class="key">(</button>
         <button class="key">)</button>
@@ -436,8 +436,8 @@
         <button class="key">|</button>
         <button class="key">:</button>
         <button class="key">"</button>
-        <button class="key"><</button>
-        <button class="key">></button>
+        <button class="key">&lt;</button>
+        <button class="key">&gt;</button>
         <button class="key">?</button>
       </div>
       <div class="keyboard-row">
@@ -454,11 +454,9 @@
       overlay.style.display = "block";
       document.querySelector("#display-overlay-content .overlay-text").innerText = "Touch anywhere to turn on display";
     }
-
     function turnOnDisplay() {
       document.getElementById("display-off-overlay").style.display = "none";
     }
-
     // Shutdown Device: Show static overlay, then issue shutdown after 5 seconds
     function shutdownDevice() {
       var overlay = document.getElementById("shutdown-overlay");
@@ -469,7 +467,6 @@
           .catch(error => console.error("Error issuing shutdown:", error));
       }, 5000);
     }
-
     // Smooth scroll for recipes section
     function smoothScrollContainer(container, target, duration) {
       var start = container.scrollTop;
@@ -489,7 +486,6 @@
       }
       requestAnimationFrame(animateScroll);
     }
-
     function scrollToRecipes() {
       var recipesSection = document.getElementById("recipes-section");
       var scrollContainer = document.getElementById("child");
@@ -497,7 +493,6 @@
         smoothScrollContainer(scrollContainer, recipesSection.offsetTop, 800);
       }
     }
-
     document.addEventListener('DOMContentLoaded', function() {
       // Show keyboard when the search input is focused
       document.addEventListener("focusin", function(e) {
@@ -505,7 +500,6 @@
           document.getElementById("onscreen-keyboard").style.display = "block";
         }
       });
-
       // SHIFT mode for the alphabet panel only
       let isShiftActive = false;
       const shiftBtn = document.querySelector('.shift-btn');
@@ -542,14 +536,12 @@
           }
         });
       });
-
       function toggleShiftMode(enabled) {
         shiftBtn.classList.toggle("shift-active", enabled);
         document.querySelectorAll("#alphabet-panel .key:not([data-key])").forEach((k) => {
           k.innerText = enabled ? k.innerText.toUpperCase() : k.innerText.toLowerCase();
         });
       }
-
       // Handle keys in the symbols panel
       document.querySelectorAll("#symbols-panel .key").forEach(function(btn) {
         btn.addEventListener("click", function() {
@@ -575,7 +567,6 @@
           searchInput.focus();
         });
       });
-
       // Toggle between alphabet and symbols panels
       document.getElementById("toggle-symbols-btn").addEventListener("click", function() {
         document.getElementById("alphabet-panel").style.display = "none";
@@ -585,7 +576,6 @@
         document.getElementById("symbols-panel").style.display = "none";
         document.getElementById("alphabet-panel").style.display = "block";
       });
-
       // Draggable keyboard
       (function() {
         const keyboard = document.getElementById("onscreen-keyboard");
@@ -611,7 +601,14 @@
           isDragging = false;
         });
       })();
-
+      // Hide the keyboard if the user clicks anywhere outside the keyboard and search input.
+      document.addEventListener('click', function(e) {
+        const keyboard = document.getElementById("onscreen-keyboard");
+        const searchInput = document.getElementById("search-input");
+        if (keyboard && !keyboard.contains(e.target) && e.target !== searchInput) {
+          keyboard.style.display = "none";
+        }
+      });
       // Bouncing DVD Animation for Display-Off Overlay
       (function() {
         var overlayContent = document.getElementById("display-overlay-content");
@@ -642,7 +639,6 @@
         }
         requestAnimationFrame(animateOverlayContent);
       })();
-
       // Scroll to recipes if there's a search query
       if (window.location.search.indexOf("q=") !== -1) {
         setTimeout(scrollToRecipes, 300);

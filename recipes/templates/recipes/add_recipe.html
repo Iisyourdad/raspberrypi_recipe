@@ -7,17 +7,24 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'recipes/css/styles.css' %}">
   <style>
+    /* Force html and body to fill the viewport */
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background: #f7f7f7;
       font-family: 'Roboto', sans-serif;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
+      overflow-y: auto;
     }
-    /* Nav bar as in index.html (right section removed) */
+    /* Nav bar as in index.html */
     nav {
       background: #dec773;
       padding: 17px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     nav ul {
       list-style: none;
@@ -88,6 +95,7 @@
       border-radius: 8px;
       box-sizing: border-box;
     }
+    /* Removed fixed height and overflow to make ingredients part of unified scroll */
     #ingredients-checkboxes {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -128,7 +136,7 @@
   </style>
 </head>
 <body>
-  <!-- Nav bar from index.html with only left-aligned links -->
+  <!-- Nav bar from index.html with left-aligned links -->
   <nav>
     <ul>
       <li><a href="{% url 'index' %}">Home</a></li>
@@ -156,7 +164,6 @@
         <label for="ingredient-search">Ingredients</label>
         <input type="text" id="ingredient-search" placeholder="Search ingredients...">
         <div id="ingredients-checkboxes">
-          {# Ensure ingredients are sorted in the view/form, but we'll also sort client‑side #}
           {% for checkbox in form.ingredients %}
             <label class="ingredient-checkbox">
               {{ checkbox.tag }} <span>{{ checkbox.choice_label }}</span>
@@ -168,7 +175,7 @@
     </form>
   </div>
   <script>
-    // Toggle "selected" class when a tile is clicked
+    // Toggle "selected" class when an ingredient checkbox changes state
     document.querySelectorAll('.ingredient-checkbox input[type="checkbox"]').forEach(function(checkbox) {
       checkbox.addEventListener('change', function() {
         if (checkbox.checked) {
@@ -196,7 +203,6 @@
           var textB = b.innerText.trim().toLowerCase();
           return textA < textB ? -1 : textA > textB ? 1 : 0;
         });
-        // Clear and reappend sorted tiles
         container.innerHTML = "";
         tiles.forEach(function(tile) {
           container.appendChild(tile);
